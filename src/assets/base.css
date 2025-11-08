@@ -1,0 +1,71 @@
+:root {
+  /* Основные цвета */
+  --text-color: hsl(0, 0%, 0%);
+  --text-color-secondary: hsl(0, 0%, 40%);
+  --text-color-muted: hsl(0, 0%, 60%);
+  --text-color-button: #ffffff;
+  
+  /* Цвета фона */
+  --bg-color: hsl(0, 0%, 100%);
+  --bg-color-secondary: hsl(0, 0%, 98%);
+  --bg-color-accent: hsl(0, 0%, 95%);
+  
+  /* Акцентные цвета */
+  --primary-color: hsl(220, 90%, 56%);
+  --secondary-color: hsl(160, 84%, 39%);
+  --accent-color: hsl(38, 92%, 50%);
+  
+  /* Состояния */
+  --success-color: hsl(142, 76%, 36%);
+  --warning-color: hsl(38, 92%, 50%);
+  --error-color: hsl(0, 84%, 60%);
+  --info-color: hsl(200, 98%, 39%);
+  
+  /* Границы */
+  --border-color: hsl(0, 0%, 86%);
+  --border-color-hover: hsl(0, 0%, 70%);
+  
+  /* Размеры */
+  --border-radius: 8px;
+  --border-radius-small: 4px;
+  --border-radius-large: 12px;
+  
+  /* Отступы */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  
+  /* Шрифты */
+  --font-family-primary: 'Inter', system-ui, sans-serif;
+  --font-family-mono: 'Fira Code', monospace;
+  
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  
+  /* Тени */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  
+  /* Переходы */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 350ms ease;
+}
+
+/* Темная тема
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text-color: hsl(0, 0%, 95%);
+    --text-color-secondary: hsl(0, 0%, 70%);
+    --bg-color: hsl(0, 0%, 10%);
+    --bg-color-secondary: hsl(0, 0%, 15%);
+    --border-color: hsl(0, 0%, 25%);
+  }
+} */
