@@ -23,6 +23,7 @@ export interface ResponseImagesList {
 export interface ResultResponse {
   success: boolean
   message: string
+  image_id?: number // ДОБАВЛЕНО: опциональное поле
 }
 
 export interface ImageUploadForm {
@@ -135,10 +136,18 @@ class ImagesAPI {
     })
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      const errorData = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }))
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
     }
 
-    return response.json()
+    const result = await response.json()
+
+    // Приводим ответ сервера к интерфейсу ResultResponse
+    return {
+      success: result.success,
+      message: result.message,
+      image_id: result.data?.image_id,
+    }
   }
 
   // Загрузка множественных изображений

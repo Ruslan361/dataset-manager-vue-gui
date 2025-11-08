@@ -61,14 +61,14 @@
               :key="`col-avg-${colIndex}`"
               class="overall-average-cell"
             >
-              {{ getColumnAverage(colIndex) }}
+              <!-- {{ getColumnAverage(colIndex) }} -->
             </td>
             <td 
               v-for="category in categories" 
               :key="`overall-cat-placeholder-${category.id}`"
               class="overall-category-cell"
             >
-              {{ getTotalCategoryAverage(category.id) }}
+                {{ getAverageOfRowAveragesByCategory(category.id) }}
             </td>
           </tr>
         </tbody>
@@ -218,6 +218,23 @@ const handleCellClick = (row: number, col: number) => {
 
 const showCellMenu = (event: MouseEvent, row: number, col: number) => {
   cellMenu.value = { visible: true, x: event.clientX, y: event.clientY, selectedRow: row, selectedCol: col };
+}
+
+const getAverageOfRowAveragesByCategory = (categoryId: string): string => {
+  const rowAverages: number[] = [];
+  for (let rowIndex = 0; rowIndex < props.tableState.rows; rowIndex++) {
+    const rowAvgStr = getRowAverageByCategory(rowIndex, categoryId);
+    if (rowAvgStr !== '---') {
+      rowAverages.push(parseFloat(rowAvgStr));
+    }
+  }
+
+  if (rowAverages.length === 0) {
+    return '---';
+  }
+
+  const sumOfAverages = rowAverages.reduce((acc, val) => acc + val, 0);
+  return (sumOfAverages / rowAverages.length).toFixed(3);
 }
 
 const closeCellMenu = () => {

@@ -7,6 +7,7 @@ import Button from '@/components/Button.vue'
 import MarkupDropdown from '@/components/MarkupDropdown.vue'
 import Pagination from '@/components/Pagination.vue'
 import ImageUploadModal from '@/components/ImageUploadModal.vue'
+import MarkupImporter from '@/components/MarkupImporter.vue' // Импортируем новый компонент
 import { imagesAPI, type Image } from '@/api/images'
 
 const route = useRoute()
@@ -273,6 +274,12 @@ const forceRefresh = async () => {
   await loadImages(currentPage.value)
 }
 
+// НОВЫЙ обработчик для события от импортера
+const handleImportCompleted = () => {
+  console.log('Import completed, refreshing image list...')
+  forceRefresh()
+}
+
 // Загружаем данные при монтировании
 onMounted(() => {
   loadImages()
@@ -296,6 +303,9 @@ onMounted(() => {
           <h2 class="page-title">Изображения датасета #{{ datasetId }}</h2>
           
           <div class="header-actions">
+            <!-- ДОБАВЛЕНО: Компонент импорта -->
+            <MarkupImporter :dataset-id="datasetId" @import-completed="handleImportCompleted" />
+
             <Button 
               variant="primary"
               size="medium"
@@ -467,7 +477,7 @@ onMounted(() => {
 
 .header-actions {
   display: flex;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm); /* Уменьшим отступ для большего кол-ва кнопок */
   align-items: center;
 }
 

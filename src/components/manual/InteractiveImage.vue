@@ -6,13 +6,20 @@
       </slot>
     </div>
     
+    <!-- ИЗМЕНЕНО: Добавлены обработчики для зума и панорамирования -->
     <div 
       class="interactive-wrapper" 
       ref="interactiveImageContainer"
       @contextmenu.prevent="handleContextMenu"
+      @wheel.prevent="handleWheelZoom"
     >
-      <!-- ИСПРАВЛЕНО: Контейнер для изображения и линий -->
-      <div class="image-and-lines-container" ref="imageContainer">
+      <!-- ИЗМЕНЕНО: Применены стили для трансформации -->
+      <div 
+        class="image-and-lines-container" 
+        ref="imageContainer"
+        :style="imageTransformStyle"
+        @mousedown="startPan"
+      >
         <img 
           ref="imageElement"
           :src="imageUrl" 
@@ -104,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, nextTick, type PropType } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, type PropType } from 'vue'
 
 // Изменено: храним относительные координаты (0-1) вместо абсолютных пикселей
 interface Line {
@@ -156,6 +163,20 @@ const contextMenu = ref({
   lineId: null as string | null,
   intersectionLines: [] as string[]
 })
+
+// --- НОВОЕ: Состояние для зума и панорамирования ---
+const zoomLevel = ref(1)
+const panOffset = ref({ x: 0, y: 0 })
+const isPanning = ref(false)
+const panStart = ref({ x: 0, y: 0 })
+
+// --- COMPUTED ---
+
+// НОВОЕ: Вычисляемое свойство для применения transform
+const imageTransformStyle = computed(() => ({
+  transform: `scale(${zoomLevel.value}) translate(${panOffset.value.x}px, ${panOffset.value.y}px)`,
+  cursor: isPanning.value ? 'grabbing' : (zoomLevel.value > 1 ? 'grab' : 'default')
+}))
 
 // --- УДАЛЕНЫ ВСЕ WATCHERS И ФУНКЦИИ ИНИЦИАЛИЗАЦИИ ---
 // watch, onImageLoad, initializeLinesFromProps, emitLinesChanged - больше не нужны
@@ -326,6 +347,57 @@ const handleDocumentClick = () => {
   }
 }
 
+// --- НОВЫЕ МЕТОДЫ: Зум и Панорамирование ---
+
+const handleWheelZoom = (event: WheelEvent) => {
+  // event.preventDefault() уже стоит в шаблоне
+  const zoomSpeed = 0.1
+  const oldZoom = zoomLevel.value
+
+  if (event.deltaY < 0) {
+    // Zoom In
+    zoomLevel.value = Math.min(zoomLevel.value + zoomSpeed, 5) // Максимальный зум 5x
+  } else {
+    // Zoom Out
+    zoomLevel.value = Math.max(zoomLevel.value - zoomSpeed, 1) // Минимальный зум 1x
+  }
+
+  // Сбрасываем панорамирование, если вернулись к исходному масштабу
+  if (zoomLevel.value === 1) {
+    panOffset.value = { x: 0, y: 0 }
+  }
+}
+
+const startPan = (event: MouseEvent) => {
+  // Не начинаем панорамирование, если кликнули по линии или не в режиме зума
+  if (event.target !== imageContainer.value && event.target !== imageElement.value) return
+  if (zoomLevel.value <= 1) return
+  
+  event.preventDefault()
+  isPanning.value = true
+  panStart.value = {
+    x: event.clientX - panOffset.value.x,
+    y: event.clientY - panOffset.value.y,
+  }
+  document.addEventListener('mousemove', onPan)
+  document.addEventListener('mouseup', endPan)
+}
+
+const onPan = (event: MouseEvent) => {
+  if (!isPanning.value) return
+  event.preventDefault()
+  panOffset.value = {
+    x: event.clientX - panStart.value.x,
+    y: event.clientY - panStart.value.y,
+  }
+}
+
+const endPan = () => {
+  isPanning.value = false
+  document.removeEventListener('mousemove', onPan)
+  document.removeEventListener('mouseup', endPan)
+}
+
 onMounted(() => {
   console.log('InteractiveImage mounted')
   document.addEventListener('click', handleDocumentClick)
@@ -335,6 +407,8 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', handleDocumentClick)
   document.removeEventListener('mousemove', onDrag)
   document.removeEventListener('mouseup', endDrag)
+  document.removeEventListener('mousemove', onPan)
+  document.removeEventListener('mouseup', endPan)
 })
 
 </script>
@@ -370,6 +444,8 @@ onBeforeUnmount(() => {
   background-color: var(--bg-color-secondary);
   min-height: 300px;
   padding: var(--spacing-sm);
+  /* НОВОЕ: Скрываем все, что выходит за пределы при зуме */
+  overflow: hidden;
 }
 
 /* НОВОЕ: Контейнер для изображения и линий */
@@ -378,6 +454,10 @@ onBeforeUnmount(() => {
   display: inline-block;
   max-width: 100%;
   max-height: 100%;
+  /* НОВОЕ: Плавный переход для трансформаций */
+  transition: transform 0.1s ease-out;
+  /* НОВОЕ: Указываем, откуда масштабировать (из центра) */
+  transform-origin: center center;
 }
 
 /* ИСПРАВЛЕНО: Изображение автоматически масштабируется */
@@ -387,7 +467,8 @@ onBeforeUnmount(() => {
   max-height: 100%;
   width: auto;
   height: auto;
-  object-fit: contain;
+  /* ИЗМЕНЕНО: object-fit больше не нужен, так как мы управляем размером контейнера */
+  /* object-fit: contain; */
 }
 
 /* ИСПРАВЛЕНО: Overlay для линий, точно повторяет размеры изображения */
