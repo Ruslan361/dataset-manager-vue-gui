@@ -76,6 +76,45 @@ class DatasetsAPI {
 
     return response.json()
   }
+
+  async exportDataset(datasetId: number): Promise<{ blob: Blob, filename: string }> {
+    const response = await fetch(`${API_BASE_URL}/archive/datasets/${datasetId}/export`, {
+      method: 'GET',
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const contentDisposition = response.headers.get('content-disposition');
+    let filename = 'dataset.zip';
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1];
+      }
+    }
+
+    const blob = await response.blob();
+    return { blob, filename };
+  }
+
+  async importDataset(file: File): Promise<ResultResponse> {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch(`${API_BASE_URL}/datasets/import`, {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json()
+  }
 }
 
 export const datasetsAPI = new DatasetsAPI()

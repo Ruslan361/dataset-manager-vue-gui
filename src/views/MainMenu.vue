@@ -14,6 +14,7 @@ const datasets = ref<Dataset[]>([])
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 const showCreateModal = ref(false)
+const importLoading = ref(false)
 
 // Загрузка датасетов
 const loadDatasets = async () => {
@@ -74,6 +75,61 @@ const handleDeleteDataset = async (id: number) => {
   }
 }
 
+// Экспорт датасета
+const handleExportDataset = async (id: number) => {
+  try {
+    const { blob, filename } = await datasetsAPI.exportDataset(id)
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    window.URL.revokeObjectURL(url)
+  } catch (err) {
+    error.value = 'Ошибка при экспорте датасета'
+    console.error('Error exporting dataset:', err)
+  }
+}
+
+// Обработчик выбора файла для импорта
+const onFileSelected = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  if (!input.files?.length) {
+    return
+  }
+  const file = input.files[0]
+  if (!file) {
+    return
+  }
+  
+  importLoading.value = true
+  error.value = null
+
+  try {
+    const result = await datasetsAPI.importDataset(file)
+    if (result.success) {
+      await loadDatasets()
+    } else {
+      error.value = result.message || 'Ошибка при импорте датасета'
+    }
+  } catch (err: any) {
+    error.value = err.message || 'Ошибка при импорте датасета'
+    console.error('Error importing dataset:', err)
+  } finally {
+    importLoading.value = false
+    // Reset file input
+    input.value = ''
+  }
+}
+
+// Триггер для инпута файла
+const triggerFileInput = () => {
+  const fileInput = document.getElementById('import-dataset-input')
+  fileInput?.click()
+}
+
 const handleDatasetClick = (id: string) => {
   router.push(`/dataset/${id}`)
 }
@@ -100,14 +156,25 @@ onMounted(() => {
       <div class="container">
         <div class="page-header">
           <h2 class="page-title">Мои датасеты</h2>
-          <Button 
-            variant="primary" 
-            size="medium"
-            @click="openCreateModal"
-            :disabled="isLoading"
-          >
-            + Создать датасет
-          </Button>
+          <div class="header-actions">
+            <input type="file" id="import-dataset-input" @change="onFileSelected" accept=".zip" hidden>
+            <Button
+              variant="secondary"
+              size="medium"
+              @click="triggerFileInput"
+              :disabled="isLoading || importLoading"
+            >
+              {{ importLoading ? 'Импорт...' : 'Импортировать датасет' }}
+            </Button>
+            <Button 
+              variant="primary" 
+              size="medium"
+              @click="openCreateModal"
+              :disabled="isLoading || importLoading"
+            >
+              + Создать датасет
+            </Button>
+          </div>
         </div>
 
         <!-- Сообщение об ошибке -->
@@ -123,8 +190,8 @@ onMounted(() => {
         </div>
 
         <!-- Индикатор загрузки -->
-        <div v-if="isLoading" class="loading">
-          Загрузка датасетов...
+        <div v-if="isLoading || importLoading" class="loading">
+          {{ isLoading ? 'Загрузка датасетов...' : 'Импорт датасета...' }}
         </div>
 
         <!-- Список датасетов -->
@@ -139,6 +206,7 @@ onMounted(() => {
             :items-count="0"
             @click="handleDatasetClick"
             @delete="handleDeleteDataset"
+            @export="handleExportDataset"
           />
         </div>
 
@@ -187,6 +255,11 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--spacing-xl);
+}
+
+.header-actions {
+  display: flex;
+  gap: var(--spacing-md);
 }
 
 .page-title {

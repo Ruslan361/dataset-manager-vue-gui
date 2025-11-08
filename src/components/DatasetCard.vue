@@ -19,6 +19,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   click: [id: string]
   delete: [id: number]
+  export: [id: number]
 }>()
 
 const handleClick = () => {
@@ -28,6 +29,11 @@ const handleClick = () => {
 const handleDelete = (event: Event) => {
   event.stopPropagation()
   emit('delete', parseInt(props.id))
+}
+
+const handleExport = (event: Event) => {
+  event.stopPropagation()
+  emit('export', parseInt(props.id))
 }
 
 const formatDate = (date?: Date) => {
@@ -57,8 +63,15 @@ const handleImageError = (e: Event) => {
         <span class="dataset-card__items-count">{{ itemsCount }} элементов</span>
       </div>
       <div class="dataset-card__actions">
+        <button
+          class="action-button export-button"
+          @click="handleExport"
+          title="Экспортировать датасет"
+        >
+          📤
+        </button>
         <button 
-          class="delete-button"
+          class="action-button delete-button"
           @click="handleDelete"
           title="Удалить датасет"
         >
@@ -129,15 +142,21 @@ const handleImageError = (e: Event) => {
 .dataset-card__actions {
   position: absolute;
   top: var(--spacing-sm);
-  left: var(--spacing-sm);
+  right: var(--spacing-sm);
+  display: flex;
+  gap: var(--spacing-sm);
+  opacity: 0;
+  transition: var(--transition-base);
 }
 
-.delete-button {
-  width: 24px;
-  height: 24px;
+.dataset-card:hover .dataset-card__actions {
+  opacity: 1;
+}
+
+.action-button {
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background-color: var(--error-color);
-  color: var(--text-color-button);
   border: none;
   cursor: pointer;
   display: flex;
@@ -146,16 +165,29 @@ const handleImageError = (e: Event) => {
   font-size: 16px;
   font-weight: bold;
   transition: var(--transition-base);
-  opacity: 0;
+  box-shadow: var(--shadow-sm);
 }
 
-.dataset-card:hover .delete-button {
-  opacity: 1;
+.action-button:hover {
+  transform: scale(1.1);
+}
+
+.delete-button {
+  background-color: var(--error-color);
+  color: var(--text-color-button);
 }
 
 .delete-button:hover {
   background-color: #dc2626;
-  transform: scale(1.1);
+}
+
+.export-button {
+  background-color: var(--primary-color);
+  color: var(--text-color-button);
+}
+
+.export-button:hover {
+  background-color: var(--primary-color-dark);
 }
 
 .dataset-card__content {
