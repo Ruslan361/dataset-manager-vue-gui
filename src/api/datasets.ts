@@ -28,6 +28,19 @@ export interface ResponseDatasetsList {
 export interface ResultResponse {
   success: boolean
   message: string
+  dataset_id?: number
+}
+
+export interface TaskStartResponse {
+  task_id: string
+  status: string
+}
+
+export interface TaskStatusResponse {
+  task_id: string
+  status: 'queued' | 'processing' | 'completed' | 'failed'
+  message: string
+  error?: string
 }
 
 const API_BASE_URL = 'http://localhost:8000/api/v1/IO'
@@ -77,40 +90,69 @@ class DatasetsAPI {
     return response.json()
   }
 
-  async exportDataset(datasetId: number): Promise<{ blob: Blob, filename: string }> {
-    const response = await fetch(`${API_BASE_URL}/archive/datasets/${datasetId}/export`, {
-      method: 'GET',
+  /**
+   * Экспорт датасета.
+   * 1. Запуск задачи
+   * 2. Ожидание
+   * 3. Возврат ссылки на скачивание (без fetch!)
+   */
+  async exportDataset(datasetId: number): Promise<string> { // <--- Возвращаем string (URL)
+    // 1. Запуск задачи
+    const startResponse = await fetch(`${API_BASE_URL}/archive/export/${datasetId}`, {
+      method: 'POST',
     })
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+    if (!startResponse.ok) {
+      const err = await startResponse.json().catch(() => ({}))
+      throw new Error(err.detail || `Failed to start export task: ${startResponse.status}`)
     }
 
-    const contentDisposition = response.headers.get('content-disposition');
-    let filename = 'dataset.zip';
-    if (contentDisposition) {
-      const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-      if (filenameMatch && filenameMatch[1]) {
-        filename = filenameMatch[1];
+    const startData: TaskStartResponse = await startResponse.json()
+    const taskId = startData.task_id
+
+    // 2. Опрос статуса (Polling)
+    const pollInterval = 1000
+    const maxAttempts = 60
+    let attempt = 0
+
+    while (attempt < maxAttempts) {
+      const statusResponse = await fetch(`${API_BASE_URL}/archive/status/${taskId}`)
+      
+      if (!statusResponse.ok) {
+        throw new Error(`Failed to check task status: ${statusResponse.status}`)
       }
+
+      const statusData: TaskStatusResponse = await statusResponse.json()
+
+      if (statusData.status === 'completed') {
+        // Задача готова! Просто возвращаем ссылку.
+        return `${API_BASE_URL}/archive/download/${taskId}`
+      }
+
+      if (statusData.status === 'failed') {
+        throw new Error(statusData.error || 'Export task failed on server')
+      }
+
+      await new Promise(resolve => setTimeout(resolve, pollInterval))
+      attempt++
     }
 
-    const blob = await response.blob();
-    return { blob, filename };
+    throw new Error('Export task timed out')
   }
 
   async importDataset(file: File): Promise<ResultResponse> {
     const formData = new FormData()
     formData.append('file', file)
 
-    const response = await fetch(`${API_BASE_URL}/datasets/import`, {
+    // Исправлен путь на /archive/import
+    const response = await fetch(`${API_BASE_URL}/archive/import`, {
       method: 'POST',
       body: formData,
     })
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+      const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }))
+      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`)
     }
 
     return response.json()

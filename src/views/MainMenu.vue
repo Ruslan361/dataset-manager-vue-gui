@@ -15,6 +15,8 @@ const isLoading = ref(false)
 const error = ref<string | null>(null)
 const showCreateModal = ref(false)
 const importLoading = ref(false)
+// ID датасета, который сейчас экспортируется (для индикации загрузки)
+const exportingId = ref<number | null>(null)
 
 // Загрузка датасетов
 const loadDatasets = async () => {
@@ -77,19 +79,27 @@ const handleDeleteDataset = async (id: number) => {
 
 // Экспорт датасета
 const handleExportDataset = async (id: number) => {
+  if (exportingId.value) return // Блокируем повторный клик
+  
   try {
-    const { blob, filename } = await datasetsAPI.exportDataset(id)
-    const url = window.URL.createObjectURL(blob)
+    exportingId.value = id
+    // Получаем готовую ссылку (после завершения задачи на бэке)
+    const downloadUrl = await datasetsAPI.exportDataset(id)
+    
+    // Создаем скрытую ссылку и кликаем по ней
+    // Это запускает "родной" механизм скачивания браузера
     const a = document.createElement('a')
-    a.href = url
-    a.download = filename
+    a.href = downloadUrl
+    a.target = '_blank' // Открыть в новой вкладке (на всякий случай, чтобы не блокировать интерфейс)
     document.body.appendChild(a)
     a.click()
     a.remove()
-    window.URL.revokeObjectURL(url)
-  } catch (err) {
-    error.value = 'Ошибка при экспорте датасета'
+    
+  } catch (err: any) {
+    error.value = err.message || 'Ошибка при экспорте датасета'
     console.error('Error exporting dataset:', err)
+  } finally {
+    exportingId.value = null
   }
 }
 
@@ -183,15 +193,15 @@ onMounted(() => {
           <Button 
             variant="secondary" 
             size="small"
-            @click="loadDatasets"
+            @click="() => { error = null; loadDatasets(); }"
           >
-            Попробовать снова
+            Закрыть
           </Button>
         </div>
 
         <!-- Индикатор загрузки -->
-        <div v-if="isLoading || importLoading" class="loading">
-          {{ isLoading ? 'Загрузка датасетов...' : 'Импорт датасета...' }}
+        <div v-if="isLoading" class="loading">
+          Загрузка датасетов...
         </div>
 
         <!-- Список датасетов -->
@@ -204,6 +214,7 @@ onMounted(() => {
             :description="dataset.description"
             :created-at="new Date(dataset.created_at)"
             :items-count="0"
+            :is-exporting="exportingId === dataset.id"
             @click="handleDatasetClick"
             @delete="handleDeleteDataset"
             @export="handleExportDataset"

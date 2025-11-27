@@ -588,6 +588,7 @@ const calculateMean = async () => {
     uiState.clearError()
     
     const result = await manualAnalysisAPI.calculateMeanLines(imageId.value)
+    const categorizedRes = await manualAnalysisAPI.getCategorizedMeanResult(imageId.value)
     
     console.log('Received result from API:', result)
     
