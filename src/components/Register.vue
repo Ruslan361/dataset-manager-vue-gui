@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
-import Card from '@/components/Card.vue'
+import Card from '@/components/common/Card.vue'
 import { useRouter } from 'vue-router' 
 import { useUserStore, UserStatus } from '@/stores/user'
 import { ref } from 'vue'

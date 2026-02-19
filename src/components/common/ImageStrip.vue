@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { imagesAPI, type Image } from '@/api/images'
-import ImageCard from '@/components/ImageCard.vue'
+import ImageCard from '@/components/common/ImageCard.vue'
 
 interface Props {
   images: Image[]

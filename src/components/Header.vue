@@ -2,7 +2,7 @@
 import { RouterLink } from 'vue-router'
 import { useUserStore, UserStatus } from '@/stores/user'
 import { APP_CONFIG } from '@/config/constants'
-import Button from '@/components/Button.vue'
+import Button from '@/components/common/Button.vue'
 
 const userStore = useUserStore()
 

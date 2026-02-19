@@ -2,8 +2,8 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Header from '@/components/Header.vue'
-import DatasetCard from '@/components/DatasetCard.vue'
-import Button from '@/components/Button.vue'
+import DatasetCard from '@/components/common/DatasetCard.vue'
+import Button from '@/components/common/Button.vue'
 import CreateDatasetModal from '@/components/CreateDatasetModal.vue'
 import { datasetsAPI, type Dataset } from '@/api/datasets'
 

@@ -1,18 +1,20 @@
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted, onMounted } from 'vue' // Добавлен onMounted
-import KMeansParameters from '@/components/KMeansParameters.vue'
+import KMeansParameters from '@/components/kmeans/KMeansParameters.vue'
 import { imagesAPI } from '@/api/images'
 import { kmeansAPI, type KMeansParameters as KMeansParams, type KMeansResult } from '@/api/kmeans'
 
 interface Props {
   selectedImageId: number | null
   datasetId: number
+  selectedImageIds?: number[] // <-- optional array of selected image IDs
 }
 
 const props = defineProps<Props>()
 
 // Состояние анализа
 const isProcessing = ref(false)
+const isMassProcessing = ref(false)
 const result = ref<KMeansResult | null>(null)
 const error = ref<string | null>(null)
 
@@ -281,6 +283,53 @@ const runKMeansAnalysis = async () => {
   }
 }
 
+const runKMeansForSelectedImages = async () => {
+  const ids = props.selectedImageIds || []
+  if (ids.length === 0) {
+    error.value = 'Нет выбранных изображений для массового запуска'
+    return
+  }
+  if (isProcessing.value || isMassProcessing.value) return
+  if (!confirm(`Запустить K-Means для ${ids.length} выбранных изображений?`)) return
+
+  try {
+    isMassProcessing.value = true
+    error.value = null
+
+    const parameters: KMeansParams = {
+      nclusters: clusters.value,
+      criteria: criteria.value,
+      max_iterations: maxIterations.value,
+      attempts: attempts.value,
+      epsilon: epsilon.value,
+      flags: flags.value,
+      colors: colors.value
+    }
+
+    const validationErrors = kmeansAPI.validateParameters(parameters)
+    if (validationErrors.length > 0) {
+      throw new Error(`Ошибки в параметрах:\n${validationErrors.join('\n')}`)
+    }
+
+    let started = 0
+    for (const imageId of ids) {
+      try {
+        await kmeansAPI.runAnalysis(imageId, parameters)
+        started++
+      } catch (err) {
+        console.warn(`Failed to start analysis for image ${imageId}`, err)
+      }
+    }
+
+    error.value = `Запущено анализов: ${started} из ${ids.length}`
+  } catch (err) {
+    const errorMessage = kmeansAPI.formatError(err)
+    error.value = `Ошибка массового запуска: ${errorMessage}`
+  } finally {
+    isMassProcessing.value = false
+  }
+}
+
 const resetAnalysis = () => {
   resetState()
 }
@@ -314,15 +363,39 @@ const getCentroidColor = (index: number): string => {
     <div class="analysis-info">
       <div class="info-header">
         <h4 class="section-title">K-Means кластеризация</h4>
-        <button 
-          v-if="selectedImageId"
-          @click="loadDefaultParameters"
-          class="reset-params-btn"
-          :disabled="isProcessing"
-          title="Загрузить параметры по умолчанию"
-        >
-          🔄 По умолчанию
-        </button>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button 
+            v-if="selectedImageId"
+            @click="loadDefaultParameters"
+            class="reset-params-btn"
+            :disabled="isProcessing"
+            title="Загрузить параметры по умолчанию"
+          >
+            🔄 По умолчанию
+          </button>
+
+          <!-- Запуск для одного выбранного изображения -->
+          <button
+            v-if="selectedImageId"
+            @click="runKMeansAnalysis"
+            class="reset-params-btn"
+            :disabled="isProcessing"
+            title="Запустить K-Means для выбранного изображения"
+          >
+            ▶️ Запустить выбранное
+          </button>
+
+          <!-- Массовый запуск для выбранных в роуте изображений -->
+          <button
+            v-if="selectedImageIds && selectedImageIds.length"
+            @click="runKMeansForSelectedImages"
+            class="reset-params-btn"
+            :disabled="isMassProcessing || isProcessing"
+            title="Запустить K-Means для выбранных изображений"
+          >
+            ▶️ Запустить для выбранных ({{ selectedImageIds.length }})
+          </button>
+        </div>
       </div>
       
       <div v-if="selectedImageId" class="selected-image-info">
@@ -454,7 +527,7 @@ const getCentroidColor = (index: number): string => {
               {{ isResultImageCollapsed ? '▼' : '▲' }}
             </span>
           </div>
-          <div v-show="!isResultImageCollapsed" class="image-container">
+          <div v-show="!isResultImageCollapsed" class="image-container result-container">
             <div v-if="isLoadingResultImage" class="image-loading">
               <div class="loading-spinner"></div>
             </div>
@@ -462,7 +535,7 @@ const getCentroidColor = (index: number): string => {
               v-else-if="getResultImageUrl"
               :src="getResultImageUrl"
               alt="K-Means результат"
-              class="analysis-image"
+              class="analysis-image result-image"
             />
             <div v-else class="image-placeholder">
               Результат не готов
@@ -693,6 +766,11 @@ const getCentroidColor = (index: number): string => {
   background-color: #f8fafc;
 }
 
+/* Фон для контейнера с результатом K-Means */
+.image-container.result-container {
+  background-color: #000;
+}
+  
 .analysis-image {
   max-width: 100%;
   max-height: 400px;
@@ -701,6 +779,11 @@ const getCentroidColor = (index: number): string => {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.result-image {
+  background-color: #000;
+  display: block;
+}
+  
 .image-loading, .image-placeholder {
   display: flex;
   flex-direction: column;

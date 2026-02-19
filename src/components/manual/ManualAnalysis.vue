@@ -72,6 +72,8 @@
     </div>
 
     <!-- ОБНОВЛЕННОЕ предупреждение о несохраненных изменениях линий -->
+    <!-- 
+    
     <div v-if="hasUnsavedLinesChanges" class="warning-banner lines-warning" data-v-inspector="src/components/manual/ManualAnalysis.vue:75:5">
       <div class="warning-content" data-v-inspector="src/components/manual/ManualAnalysis.vue:76:7">
         <span class="warning-icon" data-v-inspector="src/components/manual/ManualAnalysis.vue:77:9">⚠️</span>
@@ -95,7 +97,8 @@
           </button>
         </div>
       </div>
-    </div>
+    </div> 
+    -->
 
     <!-- Информация о линиях -->
     <div class="lines-info" data-v-inspector="src/components/manual/ManualAnalysis.vue:101:5">
@@ -144,7 +147,7 @@
     />
 
     <!-- НОВОЕ предупреждение о несохраненных изменениях ячеек -->
-    <div v-if="cellsState.hasUnsavedChanges" class="warning-banner cells-warning" data-v-inspector="src/components/manual/ManualAnalysis.vue:147:5">
+    <div v-if="cellsState.hasUnsavedChanges || hasUnsavedLinesChanges" class="warning-banner cells-warning" data-v-inspector="src/components/manual/ManualAnalysis.vue:147:5">
       <div class="warning-content" data-v-inspector="src/components/manual/ManualAnalysis.vue:148:7">
         <span class="warning-icon" data-v-inspector="src/components/manual/ManualAnalysis.vue:149:9">⚠️</span>
         <span class="warning-text" data-v-inspector="src/components/manual/ManualAnalysis.vue:150:9">
@@ -199,7 +202,7 @@ import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, reactive } 
 import SimpleImage from '@/components/manual/SimpleImage.vue'
 import InteractiveImage from '@/components/manual/InteractiveImage.vue'
 import BrightnessTable from '@/components/manual/BrightnessTable.vue'
-import CategoryStatistics from '@/components/CategoryStatistics.vue'
+import CategoryStatistics from '@/components/manual/CategoryStatistics.vue'
 import { manualAnalysisAPI, type ManualLine, type ManualResult, type CategorizedMeanResponse } from '@/api/manual'
 
 interface Props {

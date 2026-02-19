@@ -42,7 +42,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import Button from '@/components/Button.vue'
+import Button from '@/components/common/Button.vue'
 import { markupImporter, type ImportResult } from '@/api/importer'
 
 const props = defineProps<{

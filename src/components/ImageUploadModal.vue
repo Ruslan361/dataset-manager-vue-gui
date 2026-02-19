@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import Button from '@/components/Button.vue'
+import Button from '@/components/common/Button.vue'
 
 interface Props {
   isVisible: boolean

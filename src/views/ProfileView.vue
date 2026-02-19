@@ -3,8 +3,8 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore, UserStatus } from '@/stores/user'
 import Header from '@/components/Header.vue'
-import Card from '@/components/Card.vue'
-import Button from '@/components/Button.vue'
+import Card from '@/components/common/Card.vue'
+import Button from '@/components/common/Button.vue'
 
 const router = useRouter()
 const userStore = useUserStore()

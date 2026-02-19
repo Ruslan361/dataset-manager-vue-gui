@@ -3,11 +3,12 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Header from '@/components/Header.vue'
-import Button from '@/components/Button.vue'
-import ImageStrip from '@/components/ImageStrip.vue'
-import KMeansAnalysis from '@/components/KMeansAnalysis.vue'
+import Button from '@/components/common/Button.vue'
+import ImageStrip from '@/components/common/ImageStrip.vue'
+import KMeansAnalysis from '@/components/kmeans/KMeansAnalysis.vue'
 import ManualAnalysis from '@/components/manual/ManualAnalysis.vue'
 import { imagesAPI, type Image } from '@/api/images'
+import ImageCropper from '@/components/manual/ImageCropper.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -17,7 +18,7 @@ const images = ref<Image[]>([])
 const selectedImageId = ref<number | null>(null)
 const isLoading = ref(false)
 const error = ref<string | null>(null)
-const activeTab = ref<'kmeans' | 'manual'>('kmeans')
+const activeTab = ref<'kmeans' | 'manual' | 'crop'>('kmeans')
 const isImagePanelCollapsed = ref(false)
 
 // ID датасета и выбранных изображений из маршрута
@@ -83,7 +84,7 @@ const goBack = () => {
   router.push(`/dataset/${datasetId.value}`)
 }
 
-const setActiveTab = (tab: 'kmeans' | 'manual') => {
+const setActiveTab = (tab: 'kmeans' | 'manual' | 'crop') => {
   activeTab.value = tab
 }
 
@@ -183,18 +184,31 @@ onMounted(() => {
               >
                 Ручной анализ
               </button>
+              <button
+                class="tab"
+                :class="{ active: activeTab === 'crop' }"
+                @click="setActiveTab('crop')"
+              >
+                Обрезка изображения
+              </button>
             </div>
-
             <!-- Содержимое вкладок -->
             <div class="tab-content">
               <KMeansAnalysis
                 v-if="activeTab === 'kmeans'"
                 :selected-image-id="selectedImageId"
+                :selected-image-ids="imageIds"
                 :dataset-id="datasetId"
               />
               
               <ManualAnalysis
                 v-else-if="activeTab === 'manual'"
+                :selected-image-id="selectedImageId"
+                :dataset-id="datasetId"
+              />
+
+              <ImageCropper
+                v-else-if="activeTab === 'crop'"
                 :selected-image-id="selectedImageId"
                 :dataset-id="datasetId"
               />
