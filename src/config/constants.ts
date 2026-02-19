@@ -1,6 +1,6 @@
 export const APP_CONFIG = {
     name: 'Cicatrix Lucius',
-    logo: '/logo.svg' // путь к логотипу в папке public
+    logo: '/logo2.png' // путь к логотипу в папке public
   } as const
 
   export const ASSETS = {
