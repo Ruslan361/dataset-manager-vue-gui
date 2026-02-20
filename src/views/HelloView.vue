@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
-import Hello from '@/components/Hello.vue'
 import Register from '@/components/Register.vue'
 import { useUserStore, UserStatus } from '@/stores/user'
 import { onMounted, ref } from 'vue'
