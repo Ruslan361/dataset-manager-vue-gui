@@ -83,17 +83,60 @@ const handleExportDataset = async (id: number) => {
   
   try {
     exportingId.value = id
-    // Получаем готовую ссылку (после завершения задачи на бэке)
+    // Получаем готовую ссылку для скачивания от бэкенда
     const downloadUrl = await datasetsAPI.exportDataset(id)
     
-    // Создаем скрытую ссылку и кликаем по ней
-    // Это запускает "родной" механизм скачивания браузера
-    const a = document.createElement('a')
-    a.href = downloadUrl
-    a.target = '_blank' // Открыть в новой вкладке (на всякий случай, чтобы не блокировать интерфейс)
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
+    // Проверяем, запущено ли приложение внутри Tauri
+    const isTauri = true
+    
+    if (isTauri) {
+      // ==========================================
+      // ЛОГИКА ДЛЯ ДЕСКТОПА (TAURI)
+      // ==========================================
+      try {
+        // Динамически импортируем плагины (чтобы не ломать сборку для обычного Web)
+        // Внимание: ниже импорты для Tauri v2. 
+        // Если у вас Tauri v1, используйте '@tauri-apps/api/dialog' и '@tauri-apps/api/fs'
+        const { save } = await import('@tauri-apps/plugin-dialog')
+        const { writeFile } = await import('@tauri-apps/plugin-fs')
+        
+        // 1. Открываем системное диалоговое окно сохранения
+        const filePath = await save({
+          defaultPath: `dataset_${id}.zip`,
+          filters:[{ name: 'Архив датасета', extensions: ['zip'] }]
+        })
+        
+        if (filePath) {
+          // 2. Скачиваем файл (данные) через fetch 
+          const response = await fetch(downloadUrl)
+          if (!response.ok) throw new Error('Ошибка при скачивании файла')
+          
+          const arrayBuffer = await response.arrayBuffer()
+          
+          // 3. Сохраняем файл на диск 
+          // (Для Tauri v1 метод называется writeBinaryFile)
+          await writeFile(filePath, new Uint8Array(arrayBuffer))
+        }
+      } catch (tauriErr) {
+        console.warn('Tauri FS API error, фолбэк на системный браузер:', tauriErr)
+        
+        // Фолбэк на случай огромных файлов (>2GB) или ошибок прав:
+        // Откроет ссылку в браузере по умолчанию (Chrome/Edge/Safari), который сам скачает файл
+        const { open } = await import('@tauri-apps/plugin-shell')
+        await open(downloadUrl)
+      }
+    } else {
+      // ==========================================
+      // ЛОГИКА ДЛЯ ОБЫЧНОГО ВЕБ-БРАУЗЕРА
+      // ==========================================
+      const a = document.createElement('a')
+      a.href = downloadUrl
+      a.download = `dataset_${id}.zip` // Подсказка браузеру, что файл нужно скачать
+      a.target = '_blank'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+    }
     
   } catch (err: any) {
     error.value = err.message || 'Ошибка при экспорте датасета'

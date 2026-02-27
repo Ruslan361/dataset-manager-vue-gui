@@ -5,7 +5,13 @@
   "windows": [
     "main"
   ],
-  "permissions": [
-    "core:default"
+  "permissions":[
+    "core:default",
+  
+    "dialog:allow-save",
+    
+    "fs:allow-write",
+    
+    "shell:allow-open"
   ]
 }

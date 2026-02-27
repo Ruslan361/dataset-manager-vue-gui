@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue'
 import Button from '@/components/common/Button.vue'
+// Импортируем ChromePicker и стили из vue-color
+import { ChromePicker } from 'vue-color'
+import 'vue-color/style.css'
 
 interface Props {
   clusters: number
@@ -21,10 +24,10 @@ interface Emits {
   'update:criteria': [value: string]
   'update:flags': [value: string]
   'update:epsilon': [value: number]
-  'update:colors': [value: Array<[number, number, number]>]
+  'update:colors':[value: Array<[number, number, number]>]
   'update:isExpanded': [value: boolean]
   'runAnalysis': []
-  'resetAnalysis': []
+  'resetAnalysis':[]
 }
 
 const props = defineProps<Props>()
@@ -39,10 +42,13 @@ const localFlags = ref(props.flags)
 const localEpsilon = ref(props.epsilon)
 const localColors = ref([...props.colors])
 
+// Состояние для управления открытым пикером (хранит индекс открытого цвета)
+const activePicker = ref<number | null>(null)
+
 // Флаг для предотвращения рекурсии
 const isUpdatingFromProps = ref(false)
 
-// Синхронизация с родительским компонентом (только если изменение пришло извне)
+// Синхронизация с родительским компонентом
 watch(() => props.clusters, (newVal) => {
   if (!isUpdatingFromProps.value && newVal !== localClusters.value) {
     isUpdatingFromProps.value = true
@@ -55,33 +61,23 @@ watch(() => props.clusters, (newVal) => {
 })
 
 watch(() => props.maxIterations, (newVal) => {
-  if (!isUpdatingFromProps.value) {
-    localMaxIterations.value = newVal
-  }
+  if (!isUpdatingFromProps.value) localMaxIterations.value = newVal
 })
 
 watch(() => props.attempts, (newVal) => {
-  if (!isUpdatingFromProps.value) {
-    localAttempts.value = newVal
-  }
+  if (!isUpdatingFromProps.value) localAttempts.value = newVal
 })
 
 watch(() => props.criteria, (newVal) => {
-  if (!isUpdatingFromProps.value) {
-    localCriteria.value = newVal
-  }
+  if (!isUpdatingFromProps.value) localCriteria.value = newVal
 })
 
 watch(() => props.flags, (newVal) => {
-  if (!isUpdatingFromProps.value) {
-    localFlags.value = newVal
-  }
+  if (!isUpdatingFromProps.value) localFlags.value = newVal
 })
 
 watch(() => props.epsilon, (newVal) => {
-  if (!isUpdatingFromProps.value) {
-    localEpsilon.value = newVal
-  }
+  if (!isUpdatingFromProps.value) localEpsilon.value = newVal
 })
 
 watch(() => props.colors, (newVal) => {
@@ -90,7 +86,7 @@ watch(() => props.colors, (newVal) => {
   }
 }, { deep: true })
 
-// Обновление родительского компонента (только если изменение локальное)
+// Обновление родительского компонента
 watch(localClusters, (newVal, oldVal) => {
   if (!isUpdatingFromProps.value && newVal !== oldVal) {
     emit('update:clusters', newVal)
@@ -99,33 +95,23 @@ watch(localClusters, (newVal, oldVal) => {
 })
 
 watch(localMaxIterations, (newVal) => {
-  if (!isUpdatingFromProps.value) {
-    emit('update:maxIterations', newVal)
-  }
+  if (!isUpdatingFromProps.value) emit('update:maxIterations', newVal)
 })
 
 watch(localAttempts, (newVal) => {
-  if (!isUpdatingFromProps.value) {
-    emit('update:attempts', newVal)
-  }
+  if (!isUpdatingFromProps.value) emit('update:attempts', newVal)
 })
 
 watch(localCriteria, (newVal) => {
-  if (!isUpdatingFromProps.value) {
-    emit('update:criteria', newVal)
-  }
+  if (!isUpdatingFromProps.value) emit('update:criteria', newVal)
 })
 
 watch(localFlags, (newVal) => {
-  if (!isUpdatingFromProps.value) {
-    emit('update:flags', newVal)
-  }
+  if (!isUpdatingFromProps.value) emit('update:flags', newVal)
 })
 
 watch(localEpsilon, (newVal) => {
-  if (!isUpdatingFromProps.value) {
-    emit('update:epsilon', newVal)
-  }
+  if (!isUpdatingFromProps.value) emit('update:epsilon', newVal)
 })
 
 watch(localColors, (newVal) => {
@@ -134,17 +120,14 @@ watch(localColors, (newVal) => {
   }
 }, { deep: true })
 
-// Функция для обновления цветов при изменении количества кластеров
 const updateColorsForClusterCount = (newClusters: number) => {
   const currentColors = [...localColors.value]
-  const newColors: Array<[number, number, number]> = []
+  const newColors: Array<[number, number, number]> =[]
   
   for (let i = 0; i < newClusters; i++) {
     if (i < currentColors.length && currentColors[i]) {
-      // Сохраняем существующий цвет
       newColors.push(currentColors[i]!)
     } else {
-      // Генерируем новый цвет для нового кластера
       const newColor = generateColorForCluster(i, newClusters, newColors)
       newColors.push(newColor)
     }
@@ -153,56 +136,71 @@ const updateColorsForClusterCount = (newClusters: number) => {
   localColors.value = newColors
 }
 
-// Функция для генерации цвета для кластера
 const generateColorForCluster = (
   index: number, 
   totalClusters: number, 
   existingColors: Array<[number, number, number]>
-): [number, number, number] => {
-  // Базовое распределение по цветовому кругу
+):[number, number, number] => {
   const baseHue = (index * 360) / totalClusters
-  
-  // Добавляем небольшое смещение для разнообразия
-  const hueOffset = (index % 3) * 15 // 0, 15, 30 градусов
+  const hueOffset = (index % 3) * 15
   const hue = (baseHue + hueOffset) % 360
   
-  // Варьируем насыщенность и яркость для лучшего различия
-  const saturation = 60 + (index % 3) * 10  // 60%, 70%, 80%
-  const lightness = 45 + (index % 2) * 10   // 45%, 55%
+  const saturation = 60 + (index % 3) * 10
+  const lightness = 45 + (index % 2) * 10
   
   const rgb = hslToRgb(hue, saturation, lightness)
-  return [rgb.r, rgb.g, rgb.b]
+  return[rgb.r, rgb.g, rgb.b]
 }
 
 const toggleExpanded = () => {
   emit('update:isExpanded', !props.isExpanded)
 }
 
-const updateColor = (index: number, event: Event) => {
-  const target = event.target as HTMLInputElement
-  const hex = target.value
-  const rgb = hexToRgb(hex)
+// Открытие/закрытие пикера
+const togglePicker = (index: number) => {
+  if (props.isProcessing) return
+  activePicker.value = activePicker.value === index ? null : index
+}
+
+// Обновление цвета из vue-color
+const onColorChange = (index: number, newColor: any) => {
+  let rgb: { r: number; g: number; b: number } | null = null
+
+  if (typeof newColor === 'string') {
+    rgb = hexToRgb(newColor)
+  } else if (newColor && typeof newColor === 'object') {
+    if ('r' in newColor && 'g' in newColor && 'b' in newColor) {
+      rgb = {
+        r: Math.round(newColor.r),
+        g: Math.round(newColor.g),
+        b: Math.round(newColor.b)
+      }
+    } else if (newColor.hex) {
+      rgb = hexToRgb(newColor.hex)
+    }
+  }
+
   if (rgb) {
     const newColors = [...localColors.value]
-    newColors[index] = [rgb.r, rgb.g, rgb.b]
+    newColors[index] =[rgb.r, rgb.g, rgb.b]
     localColors.value = newColors
   }
 }
 
-// Дополнительные функции для управления цветами
 const resetColorsToDefault = () => {
-  const newColors: Array<[number, number, number]> = []
+  const newColors: Array<[number, number, number]> =[]
   
   for (let i = 0; i < localClusters.value; i++) {
-    const newColor = generateColorForCluster(i, localClusters.value, [])
+    const newColor = generateColorForCluster(i, localClusters.value,[])
     newColors.push(newColor)
   }
   
   localColors.value = newColors
+  activePicker.value = null
 }
 
 const randomizeColors = () => {
-  const newColors: Array<[number, number, number]> = []
+  const newColors: Array<[number, number, number]> =[]
   
   for (let i = 0; i < localClusters.value; i++) {
     const hue = Math.random() * 360
@@ -388,7 +386,7 @@ function rgbToHex(r: number, g: number, b: number): string {
         <div class="params-section">
           <div class="colors-header">
             <h6 class="section-subtitle">Цвета кластеров ({{ localClusters }})</h6>
-            <div class="colors-controls">
+            <div class="colors-controls-header">
               <button
                 @click="resetColorsToDefault"
                 class="colors-control-btn"
@@ -414,18 +412,30 @@ function rgbToHex(r: number, g: number, b: number): string {
               :key="`cluster-${index}`"
               class="color-item"
             >
-              <label class="color-label">Кластер {{ index + 1 }}</label>
-              <div class="color-controls">
-                <input
-                  type="color"
-                  :value="rgbToHex(color[0], color[1], color[2])"
-                  @input="updateColor(index, $event)"
-                  class="color-picker"
-                  :disabled="isProcessing"
+              <!-- Шапка цвета -->
+              <div class="color-item-header">
+                <label class="color-label">Кластер {{ index + 1 }}</label>
+                <div class="color-controls">
+                  <!-- Кнопка-превью цвета вместо input type="color" -->
+                  <div
+                    class="color-preview"
+                    :class="{ 'is-disabled': isProcessing, 'is-active': activePicker === index }"
+                    :style="{ backgroundColor: rgbToHex(color[0], color[1], color[2]) }"
+                    @click="togglePicker(index)"
+                    title="Нажмите, чтобы изменить цвет"
+                  ></div>
+                  <span class="color-rgb">
+                    RGB({{ color[0] }}, {{ color[1] }}, {{ color[2] }})
+                  </span>
+                </div>
+              </div>
+
+              <!-- Контейнер для vue-color ChromePicker -->
+              <div v-if="activePicker === index" class="color-picker-container">
+                <ChromePicker
+                  :model-value="rgbToHex(color[0], color[1], color[2])"
+                  @update:model-value="onColorChange(index, $event)"
                 />
-                <span class="color-rgb">
-                  RGB({{ color[0] }}, {{ color[1] }}, {{ color[2] }})
-                </span>
               </div>
             </div>
           </div>
@@ -504,6 +514,7 @@ function rgbToHex(r: number, g: number, b: number): string {
 
 .parameters-content {
   border-top: 1px solid var(--border-color);
+  transition: all 0.3s ease;
 }
 
 .parameters-scroll {
@@ -587,6 +598,7 @@ function rgbToHex(r: number, g: number, b: number): string {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 1px var(--primary-color);
+  transform: translateY(-1px);
 }
 
 .param-input:disabled,
@@ -596,7 +608,7 @@ function rgbToHex(r: number, g: number, b: number): string {
   background-color: var(--bg-color-accent);
 }
 
-/* Информационное сообщение для epsilon */
+/* Информационное сообщение */
 .param-info {
   margin-top: var(--spacing-xs);
 }
@@ -622,7 +634,7 @@ function rgbToHex(r: number, g: number, b: number): string {
   line-height: 1.4;
 }
 
-/* Цвета */
+/* Секция Цвета */
 .colors-header {
   display: flex;
   justify-content: space-between;
@@ -630,7 +642,7 @@ function rgbToHex(r: number, g: number, b: number): string {
   margin-bottom: var(--spacing-sm);
 }
 
-.colors-controls {
+.colors-controls-header {
   display: flex;
   gap: var(--spacing-xs);
 }
@@ -669,6 +681,13 @@ function rgbToHex(r: number, g: number, b: number): string {
   background-color: var(--bg-color);
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
+  transition: border-color 0.2s ease;
+}
+
+.color-item-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
 }
 
 .color-label {
@@ -683,18 +702,43 @@ function rgbToHex(r: number, g: number, b: number): string {
   gap: var(--spacing-sm);
 }
 
-.color-picker {
+/* Новые стили для превью цвета (взамен старого input) */
+.color-preview {
   width: 40px;
   height: 30px;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   cursor: pointer;
-  transition: opacity 0.2s ease;
+  transition: all 0.2s ease;
 }
 
-.color-picker:disabled {
-  cursor: not-allowed;
+.color-preview:hover:not(.is-disabled) {
+  border-color: var(--primary-color, #4a90e2);
+}
+
+.color-preview.is-active {
+  box-shadow: 0 0 0 2px var(--primary-color, #4a90e2);
+  border-color: var(--bg-color);
+}
+
+.color-preview.is-disabled {
   opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Контейнер для vue-color пикера */
+.color-picker-container {
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  border-top: 1px dashed var(--border-color);
+  display: flex;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .color-rgb {
@@ -706,6 +750,7 @@ function rgbToHex(r: number, g: number, b: number): string {
   border-radius: var(--border-radius-small);
 }
 
+/* Кнопки управления */
 .analysis-controls {
   display: flex;
   flex-direction: column;
@@ -758,7 +803,7 @@ function rgbToHex(r: number, g: number, b: number): string {
     align-items: flex-start;
   }
   
-  .color-picker {
+  .color-preview {
     width: 60px;
     height: 35px;
   }
@@ -769,36 +814,15 @@ function rgbToHex(r: number, g: number, b: number): string {
   }
 }
 
-/* Состояния загрузки */
 .params-section:has(.control-button:disabled) {
   opacity: 0.7;
 }
 
-.color-item:has(.color-picker:disabled) {
+.color-item:has(.color-preview.is-disabled) {
   opacity: 0.8;
-}
-
-/* Улучшенная анимация */
-.parameters-content {
-  transition: all 0.3s ease;
-}
-
-.parameters-toggle {
-  transition: transform 0.2s ease;
 }
 
 .parameters-header:hover .parameters-toggle {
   transform: scale(1.1);
-}
-
-/* Улучшенные фокус состояния */
-.param-input:focus,
-.param-select:focus {
-  transform: translateY(-1px);
-}
-
-.color-picker:focus {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
 }
 </style>
