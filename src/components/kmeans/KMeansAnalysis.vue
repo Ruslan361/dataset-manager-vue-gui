@@ -34,7 +34,7 @@ const epsilon = ref(0.5)
 const colors = ref<Array<[number, number, number]>>([
   [0, 0, 0],
   [255, 247, 89],
-  [255, 140, 0]
+  [255, 0, 0]
 ])
 
 // Состояния UI
