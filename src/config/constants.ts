@@ -1,5 +1,5 @@
 export const APP_CONFIG = {
-    name: 'Cicatrix Lucius',
+    name: 'Атрофовизуализация',
     logo: '/logo2.png' // путь к логотипу в папке public
   } as const
 

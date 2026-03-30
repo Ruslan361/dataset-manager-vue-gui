@@ -26,12 +26,14 @@
     "@tauri-apps/plugin-dialog": "^2.6.0",
     "@tauri-apps/plugin-fs": "^2.4.5",
     "@tauri-apps/plugin-shell": "^2.3.5",
+    "draggable-resizable-vue3": "^1.0.94-beta",
     "pinia": "^3.0.3",
     "pinia-plugin-persistedstate": "^4.5.0",
     "vue": "^3.5.22",
     "vue-advanced-cropper": "^2.8.9",
     "vue-color": "^3.3.3",
-    "vue-router": "^4.5.1"
+    "vue-router": "^4.5.1",
+    "vue3-draggable-resizable": "^1.6.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.1",

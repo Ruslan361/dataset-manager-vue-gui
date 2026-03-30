@@ -7,6 +7,7 @@ import Button from '@/components/common/Button.vue'
 import ImageStrip from '@/components/common/ImageStrip.vue'
 import KMeansAnalysis from '@/components/kmeans/KMeansAnalysis.vue'
 import ManualAnalysis from '@/components/manual/ManualAnalysis.vue'
+import Combo from '@/components/combo/combo.vue'
 import { imagesAPI, type Image } from '@/api/images'
 import ImageCropper from '@/components/manual/ImageCropper.vue'
 
@@ -18,7 +19,7 @@ const images = ref<Image[]>([])
 const selectedImageId = ref<number | null>(null)
 const isLoading = ref(false)
 const error = ref<string | null>(null)
-const activeTab = ref<'kmeans' | 'manual' | 'crop'>('kmeans')
+const activeTab = ref<'kmeans' | 'manual' | 'crop' | 'combo'>('kmeans')
 const isImagePanelCollapsed = ref(false)
 
 // ID датасета и выбранных изображений из маршрута
@@ -84,7 +85,7 @@ const goBack = () => {
   router.push(`/dataset/${datasetId.value}`)
 }
 
-const setActiveTab = (tab: 'kmeans' | 'manual' | 'crop') => {
+const setActiveTab = (tab: 'kmeans' | 'manual' | 'crop' | 'combo') => {
   activeTab.value = tab
 }
 
@@ -191,6 +192,13 @@ onMounted(() => {
               >
                 Обрезка изображения
               </button>
+              <button
+                class="tab"
+                :class="{ active: activeTab === 'combo' }"
+                @click="setActiveTab('combo')"
+              >
+                Комбо анализ
+              </button>
             </div>
             <!-- Содержимое вкладок -->
             <div class="tab-content">
@@ -212,6 +220,13 @@ onMounted(() => {
                 :selected-image-id="selectedImageId"
                 :dataset-id="datasetId"
               />
+
+              <Combo
+                v-else-if="activeTab === 'combo'"
+                :selected-image-id="selectedImageId"
+                :dataset-id="datasetId"
+              />
+
             </div>
           </div>
         </div>
