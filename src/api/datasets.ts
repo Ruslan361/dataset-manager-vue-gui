@@ -11,6 +11,11 @@ export interface CreateDatasetForm {
   description?: string
 }
 
+export interface UpdateDatasetForm {
+  title?: string
+  description?: string
+}
+
 export interface GetDatasetsListRequest {
   start: number
   end: number
@@ -76,6 +81,27 @@ class DatasetsAPI {
     }
 
     return response.json()
+  }
+
+  async updateDataset(datasetId: number, dataset: UpdateDatasetForm): Promise<ResultResponse> {
+    const response = await fetch(`${API_BASE_URL}/dataset/update-dataset/${datasetId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(dataset),
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const updatedDataset = await response.json()
+    return {
+      success: true,
+      message: 'Dataset updated successfully',
+      dataset_id: updatedDataset.id,
+    }
   }
 
   async removeDataset(datasetId: number): Promise<ResultResponse> {

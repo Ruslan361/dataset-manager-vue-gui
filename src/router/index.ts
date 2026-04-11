@@ -1,10 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Register from '@/components/Register.vue'
 import MainMenu from '@/views/MainMenu.vue'
-import ProfileView from '@/views/ProfileView.vue'
 import ImageView from '@/views/ImageView.vue'
 import AnalysisView from '@/views/AnalysisView.vue'
 import { useUserStore } from '@/stores/user'
+import SettingView from '@/views/SettingView.vue'
 devtool: 'source-map'
 
 const router = createRouter({
@@ -16,11 +16,16 @@ const router = createRouter({
       component: MainMenu,
       beforeEnter: (to, from, next) => {
         const userStore = useUserStore()
-        if (userStore.user) {
           next()
-        } else {
-          next('/register')
-        }
+      }
+    },
+        {
+      path: '/settings',
+      name: 'settings',
+      component: SettingView,
+      beforeEnter: (to, from, next) => {
+        const userStore = useUserStore()
+          next()
       }
     },
     {
@@ -29,11 +34,7 @@ const router = createRouter({
       component: ImageView,
       beforeEnter: (to, from, next) => {
         const userStore = useUserStore()
-        if (userStore.user) {
           next()
-        } else {
-          next('/register')
-        }
       }
     },
     {
@@ -60,25 +61,7 @@ const router = createRouter({
           (route.query.imageIds as string).split(',').map(id => parseInt(id)) : 
           []
       })
-    },
-    {
-      path: '/profile',
-      name: 'profile',
-      component: ProfileView,
-      beforeEnter: (to, from, next) => {
-        const userStore = useUserStore()
-        if (userStore.user) {
-          next()
-        } else {
-          next('/register')
-        }
-      }
-    },
-    {
-      path: '/register',
-      name: 'register',
-      component: Register
-    },
+    }
   ],
 })
 

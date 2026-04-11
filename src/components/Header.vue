@@ -23,25 +23,12 @@ const getStatusText = (status: UserStatus) => {
       <!-- Навигация -->
       <nav class="header__nav">
         <RouterLink to="/" class="header__nav-link" active-class="header__nav-link--active">
-            Мои датасеты
+            Мои документы
         </RouterLink>
         <RouterLink to="/settings" class="header__nav-link" active-class="header__nav-link--active">
           Настройки
         </RouterLink>
       </nav>
-
-      <!-- Профиль пользователя -->
-      <div class="header__profile">
-        <RouterLink to="/profile" class="profile-card">
-          <div class="profile-card__info">
-            <span class="profile-card__name">{{ userStore.user?.name }}</span>
-            <span class="profile-card__status">{{ getStatusText(userStore.user?.status!) }}</span>
-          </div>
-          <div class="profile-card__avatar">
-            {{ userStore.user?.name?.charAt(0).toUpperCase() }}
-          </div>
-        </RouterLink>
-      </div>
     </div>
   </header>
 </template>

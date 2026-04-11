@@ -5,19 +5,20 @@ interface Props {
   id: string
   title: string
   description?: string
-  previewImage?: string
+  previewImages?: string[]
   createdAt?: Date
   itemsCount?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
   description: 'Описание отсутствует',
-  previewImage: ASSETS.placeholderDataset,
+  previewImages: () => [ASSETS.placeholderDataset],
   itemsCount: 0
 })
 
 const emit = defineEmits<{
   click: [id: string]
+  edit: [id: string]
   delete: [id: number]
   export: [id: number]
 }>()
@@ -29,6 +30,11 @@ const handleClick = () => {
 const handleDelete = (event: Event) => {
   event.stopPropagation()
   emit('delete', parseInt(props.id))
+}
+
+const handleEdit = (event: Event) => {
+  event.stopPropagation()
+  emit('edit', props.id)
 }
 
 const handleExport = (event: Event) => {
@@ -48,21 +54,40 @@ const formatDate = (date?: Date) => {
 const handleImageError = (e: Event) => {
   (e.target as HTMLImageElement).src = ASSETS.placeholderDataset
 }
+
+const getPreviewImages = () => {
+  if (!props.previewImages?.length) {
+    return [ASSETS.placeholderDataset]
+  }
+
+  return props.previewImages.filter(Boolean).slice(0, 4)
+}
 </script>
 
 <template>
   <div class="dataset-card" @click="handleClick">
     <div class="dataset-card__preview">
-      <img 
-        :src="previewImage" 
-        :alt="title"
-        class="dataset-card__image"
-        @error="handleImageError"
-      >
+      <div class="dataset-card__collage" :class="`dataset-card__collage--${getPreviewImages().length}`">
+        <img
+          v-for="(image, index) in getPreviewImages()"
+          :key="`${id}-${index}-${image}`"
+          :src="image"
+          :alt="`${title} preview ${index + 1}`"
+          class="dataset-card__image"
+          @error="handleImageError"
+        >
+      </div>
       <div class="dataset-card__overlay">
         <span class="dataset-card__items-count">{{ itemsCount }} элементов</span>
       </div>
       <div class="dataset-card__actions">
+        <button
+          class="action-button edit-button"
+          @click="handleEdit"
+          title="Редактировать датасет"
+        >
+          ✎
+        </button>
         <button
           class="action-button export-button"
           @click="handleExport"
@@ -113,6 +138,38 @@ const handleImageError = (e: Event) => {
   overflow: hidden;
 }
 
+.dataset-card__collage {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  gap: 2px;
+  background-color: var(--bg-color-accent);
+}
+
+.dataset-card__collage--1 {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+.dataset-card__collage--2 {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: 1fr;
+}
+
+.dataset-card__collage--3 {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+.dataset-card__collage--3 .dataset-card__image:first-child {
+  grid-row: 1 / span 2;
+}
+
+.dataset-card__collage--4 {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
 .dataset-card__image {
   width: 100%;
   height: 100%;
@@ -127,7 +184,7 @@ const handleImageError = (e: Event) => {
 .dataset-card__overlay {
   position: absolute;
   top: var(--spacing-sm);
-  right: var(--spacing-sm);
+  left: var(--spacing-sm);
 }
 
 .dataset-card__items-count {
@@ -190,6 +247,16 @@ const handleImageError = (e: Event) => {
   background-color: var(--primary-color-dark);
 }
 
+.edit-button {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.edit-button:hover {
+  background-color: var(--bg-color-accent);
+}
+
 .dataset-card__content {
   padding: var(--spacing-md);
 }
@@ -208,6 +275,7 @@ const handleImageError = (e: Event) => {
   line-height: 1.4;
   margin: 0 0 var(--spacing-md) 0;
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;

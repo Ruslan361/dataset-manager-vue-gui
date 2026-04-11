@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted, onMounted } from 'vue' // Добавлен onMounted
-import KMeansParameters from '@/components/kmeans/KMeansParameters.vue'
 import { imagesAPI } from '@/api/images'
 import { kmeansAPI, type KMeansParameters as KMeansParams, type KMeansResult } from '@/api/kmeans'
+import { useKMeansStore } from '@/stores/kmeans'
 
 interface Props {
   selectedImageId: number | null
@@ -11,6 +11,16 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const kmeansStore = useKMeansStore()
+
+const updateKMeansParameters = (partial: Partial<KMeansParams>) => {
+  kmeansStore.setParameters({ ...kmeansStore.getParameters, ...partial })
+}
+
+const getKMeansParameters = (): KMeansParams => ({
+  ...kmeansStore.getParameters,
+  colors: [...kmeansStore.getParameters.colors]
+})
 
 // Состояние анализа
 const isProcessing = ref(false)
@@ -23,19 +33,6 @@ const originalImageBase64 = ref<string | null>(null)
 const resultImageBase64 = ref<string | null>(null)
 const isLoadingOriginalImage = ref(false)
 const isLoadingResultImage = ref(false)
-
-// Параметры анализа
-const clusters = ref(3)
-const maxIterations = ref(100)
-const attempts = ref(5)
-const criteria = ref('all')
-const flags = ref('pp')
-const epsilon = ref(0.5)
-const colors = ref<Array<[number, number, number]>>([
-  [0, 0, 0],
-  [255, 247, 89],
-  [255, 0, 0]
-])
 
 // Состояния UI
 const isParametersExpanded = ref(true)
@@ -175,7 +172,9 @@ const checkExistingResult = async () => {
       
       // Восстанавливаем параметры из результата для UI
       if (existingResult.result) {
-        if (existingResult.result.nclusters) clusters.value = existingResult.result.nclusters
+        if (existingResult.result.nclusters) {
+          updateKMeansParameters({ nclusters: existingResult.result.nclusters })
+        }
         // Восстанавливаем другие параметры по желанию...
       }
       
@@ -248,15 +247,7 @@ const runKMeansAnalysis = async () => {
     result.value = null
     resultImageBase64.value = null
     
-    const parameters: KMeansParams = {
-      nclusters: clusters.value,
-      criteria: criteria.value,
-      max_iterations: maxIterations.value,
-      attempts: attempts.value,
-      epsilon: epsilon.value,
-      flags: flags.value,
-      colors: colors.value
-    }
+    const parameters = getKMeansParameters()
     
     const validationErrors = kmeansAPI.validateParameters(parameters)
     if (validationErrors.length > 0) {
@@ -296,15 +287,7 @@ const runKMeansForSelectedImages = async () => {
     isMassProcessing.value = true
     error.value = null
 
-    const parameters: KMeansParams = {
-      nclusters: clusters.value,
-      criteria: criteria.value,
-      max_iterations: maxIterations.value,
-      attempts: attempts.value,
-      epsilon: epsilon.value,
-      flags: flags.value,
-      colors: colors.value
-    }
+    const parameters = getKMeansParameters()
 
     const validationErrors = kmeansAPI.validateParameters(parameters)
     if (validationErrors.length > 0) {
@@ -335,13 +318,8 @@ const resetAnalysis = () => {
 }
 
 const loadDefaultParameters = () => {
-  const defaultParams = kmeansAPI.getDefaultParameters(clusters.value)
-  maxIterations.value = defaultParams.max_iterations
-  attempts.value = defaultParams.attempts
-  criteria.value = defaultParams.criteria
-  flags.value = defaultParams.flags
-  epsilon.value = defaultParams.epsilon
-  colors.value = defaultParams.colors
+  const defaultParams = kmeansAPI.getDefaultParameters(kmeansStore.getParameters.nclusters)
+  kmeansStore.setParameters(defaultParams)
 }
 
 const dismissError = () => {
@@ -364,16 +342,6 @@ const getCentroidColor = (index: number): string => {
       <div class="info-header">
         <h4 class="section-title">K-Means кластеризация</h4>
         <div style="display:flex; gap:8px; align-items:center;">
-          <button 
-            v-if="selectedImageId"
-            @click="loadDefaultParameters"
-            class="reset-params-btn"
-            :disabled="isProcessing"
-            title="Загрузить параметры по умолчанию"
-          >
-            🔄 По умолчанию
-          </button>
-
           <!-- Запуск для одного выбранного изображения -->
           <button
             v-if="selectedImageId"
@@ -406,22 +374,6 @@ const getCentroidColor = (index: number): string => {
         Выберите изображение для анализа
       </div>
     </div>
-
-    <!-- Параметры анализа -->
-    <KMeansParameters
-      v-if="selectedImageId"
-      v-model:clusters="clusters"
-      v-model:maxIterations="maxIterations"
-      v-model:attempts="attempts"
-      v-model:criteria="criteria"
-      v-model:flags="flags"
-      v-model:epsilon="epsilon"
-      v-model:colors="colors"
-      v-model:isExpanded="isParametersExpanded"
-      :is-processing="isProcessing"
-      @run-analysis="runKMeansAnalysis"
-      @reset-analysis="resetAnalysis"
-    />
 
     <!-- Индикатор загрузки -->
     <div v-if="isProcessing" class="processing-indicator">
@@ -522,7 +474,7 @@ const getCentroidColor = (index: number): string => {
             class="image-header" 
             @click="isResultImageCollapsed = !isResultImageCollapsed"
           >
-            <h6 class="image-title">K-Means результат</h6>
+            <h6 class="image-title">Результат кластеризации</h6>
             <span class="image-toggle">
               {{ isResultImageCollapsed ? '▼' : '▲' }}
             </span>
@@ -534,7 +486,7 @@ const getCentroidColor = (index: number): string => {
             <img
               v-else-if="getResultImageUrl"
               :src="getResultImageUrl"
-              alt="K-Means результат"
+              alt="Результат кластеризации"
               class="analysis-image result-image"
             />
             <div v-else class="image-placeholder">

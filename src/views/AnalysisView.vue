@@ -10,6 +10,7 @@ import ManualAnalysis from '@/components/manual/ManualAnalysis.vue'
 import Combo from '@/components/combo/combo.vue'
 import { imagesAPI, type Image } from '@/api/images'
 import ImageCropper from '@/components/manual/ImageCropper.vue'
+import { useOtherStore } from '@/stores/other'
 
 const route = useRoute()
 const router = useRouter()
@@ -21,6 +22,8 @@ const isLoading = ref(false)
 const error = ref<string | null>(null)
 const activeTab = ref<'kmeans' | 'manual' | 'crop' | 'combo'>('kmeans')
 const isImagePanelCollapsed = ref(false)
+const otherStore = useOtherStore()
+const isBackwardCompatibility = computed(() => otherStore.isBackwardCompatibility)
 
 // ID датасета и выбранных изображений из маршрута
 const datasetId = computed(() => parseInt(route.params.datasetId as string))
@@ -118,7 +121,7 @@ onMounted(() => {
           <div class="title-section">
             <h2 class="page-title">Анализ изображений</h2>
             <div class="header-info">
-              Датасет #{{ datasetId }} • {{ images.length }} изображений
+              Документ #{{ datasetId }} • {{ images.length }} изображений
             </div>
           </div>
         </div>
@@ -176,7 +179,7 @@ onMounted(() => {
                 :class="{ active: activeTab === 'kmeans' }"
                 @click="setActiveTab('kmeans')"
               >
-                K-Means анализ
+                Кластеризация
               </button>
               <button
                 class="tab"
@@ -197,7 +200,7 @@ onMounted(() => {
                 :class="{ active: activeTab === 'combo' }"
                 @click="setActiveTab('combo')"
               >
-                Комбо анализ
+                Комбинированный анализ
               </button>
             </div>
             <!-- Содержимое вкладок -->

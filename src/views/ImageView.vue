@@ -9,7 +9,9 @@ import Pagination from '@/components/Pagination.vue'
 import ImageUploadModal from '@/components/ImageUploadModal.vue'
 import MarkupImporter from '@/components/MarkupImporter.vue' // Импортируем новый компонент
 import { imagesAPI, type Image } from '@/api/images'
+import { useOtherStore } from '@/stores/other'
 
+const otherStore = useOtherStore()
 const route = useRoute()
 const router = useRouter()
 
@@ -20,8 +22,9 @@ const isLoading = ref(false)
 const error = ref<string | null>(null)
 const currentPage = ref(1)
 const totalImages = ref(0)
-const itemsPerPage = 20
+const itemsPerPage = computed<number>(() => Number(otherStore.imagesInOnePage) || 0)
 const showUploadModal = ref(false)
+const isBackwardCompatibility = computed(() => otherStore.isBackwardCompatibility)
 
 // Ссылки на компоненты
 const uploadModalRef = ref<InstanceType<typeof ImageUploadModal>>()
@@ -29,14 +32,28 @@ const uploadModalRef = ref<InstanceType<typeof ImageUploadModal>>()
 // ID датасета из маршрута
 const datasetId = computed(() => parseInt(route.params.id as string))
 
+const handleAnalysis = () => {
+  if (!selectedImages.value || selectedImages.value.size === 0 || !datasetId.value) {
+    alert('Выберите изображения для анализа')
+    return
+  }
+  
+  const imageIds = Array.from(selectedImages.value).join(',')
+  router.push({
+    path: `/analysis/${datasetId.value}`,
+    query: { imageIds }
+  })
+}
+
+
 // Улучшенная функция загрузки с лучшей обработкой ошибок
 const loadImages = async (page: number = 1) => {
   try {
     isLoading.value = true
     error.value = null
     
-    const start = (page - 1) * itemsPerPage
-    const end = start + itemsPerPage
+    const start = (page - 1) * itemsPerPage.value
+    const end = start + itemsPerPage.value
     
     console.log(`Loading images for page ${page} (${start}-${end})`)
     
@@ -199,11 +216,6 @@ const goBack = () => {
   router.push('/')
 }
 
-// Метод для принудительной очистки кэша
-const clearCache = () => {
-  imagesAPI.clearAllCache()
-  console.log('Cache cleared')
-}
 
 // Обработчики загрузки изображений
 const openUploadModal = () => {
@@ -298,13 +310,14 @@ onMounted(() => {
             size="medium"
             @click="goBack"
           >
-            ← Назад к датасетам
+            ← Назад к документам
           </Button>
-          <h2 class="page-title">Изображения датасета #{{ datasetId }}</h2>
+          <h2 class="page-title">Изображения документа #{{ datasetId }}</h2>
           
           <div class="header-actions">
-            <!-- ДОБАВЛЕНО: Компонент импорта -->
-            <MarkupImporter :dataset-id="datasetId" @import-completed="handleImportCompleted" />
+            <div class="import-section" v-if="isBackwardCompatibility">
+              <MarkupImporter :dataset-id="datasetId" @import-completed="handleImportCompleted" />
+            </div>
 
             <Button 
               variant="primary"
@@ -315,16 +328,7 @@ onMounted(() => {
               📤 Загрузить изображения
             </Button>
             
-            <Button 
-              variant="secondary"
-              size="small"
-              @click="clearCache"
-              title="Очистить кэш изображений"
-            >
-              🗑️ Очистить кэш
-            </Button>
-            
-            <!-- Кнопка принудительного обновления -->
+
             <Button 
               variant="secondary"
               size="small"
@@ -363,14 +367,14 @@ onMounted(() => {
             >
               {{ isLoading ? 'Удаление...' : 'Удалить выбранные' }}
             </Button>
-            
-            <MarkupDropdown
-              :disabled="selectedImages.size === 0 || isLoading"
-              :selected-images="selectedImages"
-              :dataset-id="datasetId"
-              @manual-markup="handleManualMarkup"
-              @k-means-markup="handleKMeansMarkup"
-            />
+            <Button 
+              variant="primary"
+              size="medium"
+              @click="handleAnalysis"
+              :disabled="isLoading"
+            >
+              Анализ
+            </Button>
           </div>
         </div>
 

@@ -5,15 +5,20 @@ import Header from '@/components/Header.vue'
 import DatasetCard from '@/components/common/DatasetCard.vue'
 import Button from '@/components/common/Button.vue'
 import CreateDatasetModal from '@/components/CreateDatasetModal.vue'
+import EditDatasetModal from '@/components/EditDatasetModal.vue'
 import { datasetsAPI, type Dataset } from '@/api/datasets'
+import { imagesAPI } from '@/api/images'
 
 const router = useRouter()
 
 // Состояние компонента
 const datasets = ref<Dataset[]>([])
+const datasetPreviews = ref<Record<number, { images: string[]; total: number }>>({})
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 const showCreateModal = ref(false)
+const showEditModal = ref(false)
+const editingDataset = ref<Dataset | null>(null)
 const importLoading = ref(false)
 // ID датасета, который сейчас экспортируется (для индикации загрузки)
 const exportingId = ref<number | null>(null)
@@ -32,12 +37,49 @@ const loadDatasets = async () => {
     })
     
     datasets.value = response.datasets
+    await loadDatasetPreviews(response.datasets)
   } catch (err) {
     error.value = 'Ошибка при загрузке датасетов'
     console.error('Error loading datasets:', err)
   } finally {
     isLoading.value = false
   }
+}
+
+const loadDatasetPreviews = async (datasetsList: Dataset[]) => {
+  const previewEntries = await Promise.allSettled(
+    datasetsList.map(async (dataset) => {
+      const imagesResponse = await imagesAPI.getImagesList(dataset.id, {
+        start: 0,
+        end: 4,
+        sort_field: 'id',
+        sort_order: 'asc'
+      })
+
+      return [
+        dataset.id,
+        {
+          images: await Promise.all(
+            imagesResponse.images
+              .slice(0, 4)
+              .map((image) => imagesAPI.getImageBase64(image.id))
+          ),
+          total: imagesResponse.total
+        }
+      ] as const
+    })
+  )
+
+  const nextPreviews: Record<number, { images: string[]; total: number }> = {}
+
+  for (const entry of previewEntries) {
+    if (entry.status === 'fulfilled') {
+      const [datasetId, previewData] = entry.value
+      nextPreviews[datasetId] = previewData
+    }
+  }
+
+  datasetPreviews.value = nextPreviews
 }
 
 // Создание нового датасета
@@ -54,6 +96,37 @@ const handleCreateDataset = async (datasetData: { title: string; description: st
   } catch (err) {
     error.value = 'Ошибка при создании датасета'
     console.error('Error creating dataset:', err)
+  }
+}
+
+const openEditModal = (datasetId: string) => {
+  const dataset = datasets.value.find((item) => item.id.toString() === datasetId)
+  if (!dataset) return
+
+  editingDataset.value = dataset
+  showEditModal.value = true
+}
+
+const closeEditModal = () => {
+  showEditModal.value = false
+  editingDataset.value = null
+}
+
+const handleEditDataset = async (datasetData: { title: string; description: string }) => {
+  if (!editingDataset.value) return
+
+  try {
+    const result = await datasetsAPI.updateDataset(editingDataset.value.id, datasetData)
+
+    if (result.success) {
+      closeEditModal()
+      await loadDatasets()
+    } else {
+      error.value = 'Ошибка при обновлении датасета'
+    }
+  } catch (err) {
+    error.value = 'Ошибка при обновлении датасета'
+    console.error('Error updating dataset:', err)
   }
 }
 
@@ -208,7 +281,7 @@ onMounted(() => {
     <main class="main-content">
       <div class="container">
         <div class="page-header">
-          <h2 class="page-title">Мои датасеты</h2>
+          <h2 class="page-title">Мои документы</h2>
           <div class="header-actions">
             <input type="file" id="import-dataset-input" @change="onFileSelected" accept=".zip" hidden>
             <Button
@@ -225,7 +298,7 @@ onMounted(() => {
               @click="openCreateModal"
               :disabled="isLoading || importLoading"
             >
-              + Создать датасет
+              + Создать документ
             </Button>
           </div>
         </div>
@@ -244,10 +317,10 @@ onMounted(() => {
 
         <!-- Индикатор загрузки -->
         <div v-if="isLoading" class="loading">
-          Загрузка датасетов...
+          Загрузка документов...
         </div>
 
-        <!-- Список датасетов -->
+        <!-- Список документов -->
         <div v-else-if="datasets.length > 0" class="datasets-grid">
           <DatasetCard
             v-for="dataset in datasets"
@@ -256,9 +329,11 @@ onMounted(() => {
             :title="dataset.title"
             :description="dataset.description"
             :created-at="new Date(dataset.created_at)"
-            :items-count="0"
+            :preview-images="datasetPreviews[dataset.id]?.images || []"
+            :items-count="datasetPreviews[dataset.id]?.total || 0"
             :is-exporting="exportingId === dataset.id"
             @click="handleDatasetClick"
+            @edit="openEditModal"
             @delete="handleDeleteDataset"
             @export="handleExportDataset"
           />
@@ -266,14 +341,14 @@ onMounted(() => {
 
         <!-- Пустое состояние -->
         <div v-else-if="!isLoading" class="empty-state">
-          <h3>У вас пока нет датасетов</h3>
-          <p>Создайте первый датасет, чтобы начать работу</p>
+          <h3>У вас пока нет документов</h3>
+          <p>Создайте первый документ, чтобы начать работу</p>
           <Button 
             variant="primary" 
             size="medium"
             @click="openCreateModal"
           >
-            Создать первый датасет
+            Создать первый документ
           </Button>
         </div>
       </div>
@@ -284,6 +359,14 @@ onMounted(() => {
       :is-visible="showCreateModal"
       @close="closeCreateModal"
       @create="handleCreateDataset"
+    />
+
+    <EditDatasetModal
+      :is-visible="showEditModal"
+      :title="editingDataset?.title || ''"
+      :description="editingDataset?.description || ''"
+      @close="closeEditModal"
+      @save="handleEditDataset"
     />
   </div>
 </template>

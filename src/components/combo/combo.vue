@@ -76,9 +76,9 @@
               <SimpleImage
                 v-if="imageState.blurredUrl"
                 :image-url="imageState.blurredUrl"
-                title="Размытое изображение"
+                title="Обработанное изображение"
               />
-              <div v-else class="content-hint">Размытое изображение недоступно</div>
+              <div v-else class="content-hint">Обработанное изображение недоступно</div>
             </template>
 
             <template v-else-if="win.type === 'kmeans-image'">
@@ -86,10 +86,10 @@
                 <SimpleImage
                   v-if="kmeansResultImageUrl"
                   :image-url="kmeansResultImageUrl"
-                  title="K-means результат"
+                  title="Результаты кластеризации"
                 />
                 <div v-else class="content-hint">
-                  {{ isKMeansLoading ? 'Выполняется K-means...' : 'Нет изображения результата' }}
+                  {{ isKMeansLoading ? 'Выполняется кластеризация...' : 'Нет изображения результата' }}
                 </div>
               </div>
             </template>
@@ -97,14 +97,8 @@
             <template v-else>
               <div class="kmeans-panel">
                 <div class="kmeans-stats full-height">
-                  <h4>Результаты K-means</h4>
-
                   <div v-if="kmeansResult" class="stats-grid">
-                    <div><b>Статус:</b> {{ kmeansResult.status }}</div>
                     <div><b>Кластеров:</b> {{ kmeansResult.result.nclusters ?? '-' }}</div>
-                    <div><b>Компактность:</b> {{ formatCompactness(kmeansResult.result.compactness) }}</div>
-                    <div><b>Критерий:</b> {{ kmeansResult.result.criteria ?? '-' }}</div>
-                    <div><b>Пикселей:</b> {{ kmeansResult.result.processed_pixels ?? '-' }}</div>
                   </div>
 
                   <div v-else class="content-hint small">Результаты не получены</div>
@@ -117,9 +111,15 @@
                       ></span>
                       <div class="cluster-meta">
                         <div><b>Кластер {{ row.clusterIndex + 1 }}</b></div>
-                        <div>RGB: {{ row.color ? `(${row.color[0]}, ${row.color[1]}, ${row.color[2]})` : '-' }}</div>
-                        <div>Центр L: {{ row.intensityCenter ?? '-' }}</div>
-                        <div>Пикселей: {{ row.pixelCount ?? '-' }}</div>
+                        <div>Среднее значение: {{ row.intensityCenter ?? '-' }} (у.е)</div>
+                        <div>
+                          Доля изображения:
+                          {{
+                          row.pixelCount != null && kmeansResult?.result?.processed_pixels
+                            ? `${((row.pixelCount / kmeansResult.result.processed_pixels) * 100).toFixed(2)}%`
+                            : '-'
+                          }}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -185,6 +185,13 @@ interface ClusterRow {
   pixelCount: number | null
 }
 
+interface WindowRect {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
 const props = defineProps<Props>()
 const imageId = computed(() => props.selectedImageId)
 
@@ -206,17 +213,20 @@ const DEFAULT_KMEANS_CLUSTER_COUNT = 3
 const WINDOW_LAYOUT_STORAGE_KEY = 'combo-window-layouts-v1'
 const MIN_WINDOW_WIDTH = 320
 const MIN_WINDOW_HEIGHT = 220
+const WINDOW_GAP = 12
+const WINDOW_PADDING = 12
 const WINDOW_DEFAULT_SIZES: Record<WindowType, { width: number; height: number }> = {
   original: { width: 640, height: 420 },
   blurred: { width: 640, height: 420 },
   'kmeans-image': { width: 700, height: 520 },
-  'kmeans-results': { width: 620, height: 480 }
+  'kmeans-results': { width: 620, height: 960 }
 }
+const DEFAULT_WINDOW_ORDER: WindowType[] = ['original', 'blurred', 'kmeans-image', 'kmeans-results']
 const WINDOW_TITLE_MAP: Record<WindowType, string> = {
   original: 'Оригинал',
-  blurred: 'Размытое изображение',
-  'kmeans-image': 'K-means изображение',
-  'kmeans-results': 'K-means результаты'
+  blurred: 'Фильтр',
+  'kmeans-image': 'Обработанное изображение',
+  'kmeans-results': 'Результаты кластеризации'
 }
 
 const imageState = computed(() => {
@@ -288,6 +298,88 @@ const normalizeWindowSize = (width: number, height: number) => {
   }
 }
 
+const getCanvasSize = () => {
+  const container = comboContainer.value
+  if (!container) {
+    return { width: 1440, height: 860 }
+  }
+
+  const rect = container.getBoundingClientRect()
+  return {
+    width: Math.max(960, Math.floor(rect.width)),
+    height: Math.max(620, Math.floor(rect.height))
+  }
+}
+
+const fitRectToCanvas = (rect: WindowRect): WindowRect => {
+  const canvasSize = getCanvasSize()
+  const maxAllowedWidth = Math.max(MIN_WINDOW_WIDTH, canvasSize.width - WINDOW_PADDING * 2)
+  const maxAllowedHeight = Math.max(MIN_WINDOW_HEIGHT, canvasSize.height - WINDOW_PADDING * 2)
+
+  const normalized = normalizeWindowSize(
+    Math.min(rect.width, maxAllowedWidth),
+    Math.min(rect.height, maxAllowedHeight)
+  )
+
+  const maxX = Math.max(WINDOW_PADDING, canvasSize.width - normalized.width - WINDOW_PADDING)
+  const maxY = Math.max(WINDOW_PADDING, canvasSize.height - normalized.height - WINDOW_PADDING)
+
+  return {
+    x: Math.min(Math.max(rect.x, WINDOW_PADDING), maxX),
+    y: Math.min(Math.max(rect.y, WINDOW_PADDING), maxY),
+    width: normalized.width,
+    height: normalized.height
+  }
+}
+
+const getDefaultRectForType = (type: WindowType): WindowRect => {
+  const canvasSize = getCanvasSize()
+
+  const availableWidth = canvasSize.width - WINDOW_PADDING * 2
+  const availableHeight = canvasSize.height - WINDOW_PADDING * 2
+
+  const rightColumnWidth = Math.max(420, Math.floor((availableWidth - WINDOW_GAP) * 0.38))
+  const leftColumnWidth = Math.max(MIN_WINDOW_WIDTH * 2 + WINDOW_GAP, availableWidth - WINDOW_GAP - rightColumnWidth)
+
+  const topRowHeight = Math.max(260, Math.floor((availableHeight - WINDOW_GAP) * 0.45))
+  const bottomRowHeight = Math.max(MIN_WINDOW_HEIGHT, availableHeight - WINDOW_GAP - topRowHeight)
+  const leftCellWidth = Math.max(MIN_WINDOW_WIDTH, Math.floor((leftColumnWidth - WINDOW_GAP) / 2))
+
+  const leftX = WINDOW_PADDING
+  const rightX = WINDOW_PADDING + leftColumnWidth + WINDOW_GAP
+  const topY = WINDOW_PADDING
+  const bottomY = WINDOW_PADDING + topRowHeight + WINDOW_GAP
+
+  const layout: Record<WindowType, WindowRect> = {
+    original: {
+      x: leftX,
+      y: topY,
+      width: leftCellWidth,
+      height: topRowHeight
+    },
+    blurred: {
+      x: leftX + leftCellWidth + WINDOW_GAP,
+      y: topY,
+      width: leftCellWidth,
+      height: topRowHeight
+    },
+    'kmeans-image': {
+      x: leftX,
+      y: bottomY,
+      width: leftColumnWidth,
+      height: bottomRowHeight
+    },
+    'kmeans-results': {
+      x: rightX,
+      y: topY,
+      width: rightColumnWidth,
+      height: WINDOW_DEFAULT_SIZES['kmeans-results'].height
+    }
+  }
+
+  return fitRectToCanvas(layout[type])
+}
+
 const isOverlapping = (
   first: { x: number; y: number; width: number; height: number },
   second: { x: number; y: number; width: number; height: number }
@@ -332,9 +424,7 @@ const findFreePosition = (type: WindowType) => {
 }
 
 const addWindow = (type: WindowType) => {
-  const baseSize = getWindowSize(type)
-  const size = normalizeWindowSize(baseSize.width, baseSize.height)
-  const position = findFreePosition(type)
+  const defaultRect = getDefaultRectForType(type)
 
   zCounter.value += 1
 
@@ -342,10 +432,10 @@ const addWindow = (type: WindowType) => {
     id: `${type}-window`,
     type,
     title: WINDOW_TITLE_MAP[type],
-    x: position.x,
-    y: position.y,
-    width: size.width,
-    height: size.height,
+    x: defaultRect.x,
+    y: defaultRect.y,
+    width: defaultRect.width,
+    height: defaultRect.height,
     zIndex: zCounter.value
   })
 }
@@ -403,17 +493,38 @@ const persistCurrentLayout = () => {
 const restoreLayoutForImage = (): WindowData[] => {
   const stored = getGlobalLayout()
 
+  if (!stored.length) {
+    return DEFAULT_WINDOW_ORDER.map((type, index) => {
+      const rect = getDefaultRectForType(type)
+      return {
+        id: `${type}-window`,
+        type,
+        title: WINDOW_TITLE_MAP[type],
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
+        zIndex: 20 + index
+      }
+    })
+  }
+
   return stored.map((windowItem) => ({
     ...(() => {
-      const normalized = normalizeWindowSize(windowItem.width, windowItem.height)
+      const fitted = fitRectToCanvas({
+        x: windowItem.x,
+        y: windowItem.y,
+        width: windowItem.width,
+        height: windowItem.height
+      })
       return {
         id: `${windowItem.type}-window`,
         type: windowItem.type,
         title: WINDOW_TITLE_MAP[windowItem.type],
-        x: windowItem.x,
-        y: windowItem.y,
-        width: normalized.width,
-        height: normalized.height,
+        x: fitted.x,
+        y: fitted.y,
+        width: fitted.width,
+        height: fitted.height,
         zIndex: windowItem.zIndex
       }
     })()
@@ -693,8 +804,8 @@ watch(
     clusterPixelStats.value = []
 
     if (!newImageId) {
-      windows.value = restoreLayoutForImage()
-      zCounter.value = Math.max(10, ...windows.value.map((windowItem) => windowItem.zIndex))
+      windows.value = []
+      zCounter.value = 10
       return
     }
 
