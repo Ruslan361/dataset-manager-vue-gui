@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "cicatrix-lucius",
+  "productName": "Атрофовизуализация",
   "version": "0.1.0",
   "identifier": "com.ruslan361.dataset-manager",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Cicatrix Lucius",
+        "title": "Атрофовизуализация",
         "width": 800,
         "height": 600,
         "resizable": true,
