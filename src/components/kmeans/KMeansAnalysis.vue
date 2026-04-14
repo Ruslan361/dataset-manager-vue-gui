@@ -328,7 +328,9 @@ const dismissError = () => {
 
 const getCentroidColor = (index: number): string => {
   if (!result.value || !result.value.result) return 'transparent'
-  const colors = result.value.result.colors_rgb || result.value.result.colors
+
+
+  const colors = result.value.result.colors
   if (!colors || !colors[index]) return 'transparent'
   const [r, g, b] = colors[index]
   return `rgb(${r}, ${g}, ${b})`

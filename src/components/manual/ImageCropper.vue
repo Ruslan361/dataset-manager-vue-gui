@@ -77,14 +77,6 @@ const loadImageUrl = async (id: number | null) => {
         return
       }
     } catch (e) { /* ignore */ }
-
-    try {
-      const meta = await imagesAPI.getImageById(id)
-      if (meta && meta.filename) {
-        imageUrl.value = imagesAPI.getImageUrl(meta.dataset_id, meta.filename)
-        return
-      }
-    } catch (e) { /* ignore */ }
     
   } catch (err) {
     console.error('ImageCropper: error loading image', err)
