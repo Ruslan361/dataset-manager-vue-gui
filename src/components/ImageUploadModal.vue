@@ -668,7 +668,7 @@ defineExpose({
 }
 
 .file-remove:hover:not(:disabled) {
-  background-color: #dc2626;
+  background-color: var(--error-color-dark);
   transform: scale(1.1);
 }
 

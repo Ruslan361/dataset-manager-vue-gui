@@ -20,13 +20,13 @@ const clearCache = () => {
       <label class="setting-label">Количество изображений на странице</label>
       <input type="number" v-model.number="otherStore.imagesInOnePage" min="1" />
     </div>
-                <Button 
-              variant="secondary"
-              size="small"
-              @click="clearCache"
-              title="Почистить кешу"
-            >
-            Почистить кешу
-                </Button>
+        <Button 
+        variant="secondary"
+        size="small"
+        @click="clearCache"
+        title="Почистить кешу"
+    >
+    Почистить кешу
+        </Button>
   </div>
 </template>

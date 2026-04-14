@@ -1,3 +1,6 @@
+import { IO_URL as API_BASE_URL } from './config'
+import { blobToBase64 } from './utils'
+
 export interface Image {
   id: number
   filename: string
@@ -23,7 +26,7 @@ export interface ResponseImagesList {
 export interface ResultResponse {
   success: boolean
   message: string
-  image_id?: number // ДОБАВЛЕНО: опциональное поле
+  image_id?: number
 }
 
 export interface ImageUploadForm {
@@ -31,8 +34,6 @@ export interface ImageUploadForm {
   dataset_id: number
   description?: string
 }
-
-const API_BASE_URL = 'http://localhost:8000/api/v1/IO'
 
 class ImagesAPI {
   private imageCache = new Map<number, string>() // Кэш для base64 строк
@@ -246,7 +247,7 @@ class ImagesAPI {
 
     try {
       const blob = await this.downloadImage(imageId)
-      const base64 = await this.blobToBase64(blob)
+      const base64 = await blobToBase64(blob)
       
       // Сохраняем в кэш
       this.imageCache.set(imageId, base64)
@@ -256,19 +257,6 @@ class ImagesAPI {
       console.error(`Failed to download image ${imageId}:`, error)
       throw error
     }
-  }
-
-  // Вспомогательный метод для конвертации Blob в base64
-  private blobToBase64(blob: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => {
-        const result = reader.result as string
-        resolve(result) // Возвращаем полную data URL (data:image/jpeg;base64,...)
-      }
-      reader.onerror = reject
-      reader.readAsDataURL(blob)
-    })
   }
 
   // Метод для очистки кэша (при необходимости)
@@ -288,10 +276,6 @@ class ImagesAPI {
     return this.imageCache.size
   }
 
-  // Устаревший метод для прямых URL (оставляем для совместимости)
-  getImageUrl(datasetId: number, filename: string): string {
-    return `${API_BASE_URL}/uploads/images/${datasetId}/${filename}`
-  }
 }
 
 export const imagesAPI = new ImagesAPI()

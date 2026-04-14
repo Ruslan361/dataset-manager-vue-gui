@@ -16,7 +16,6 @@
     </div>
 
     <!-- Верхний блок с изображениями -->
-    <!-- ИЗМЕНЕНО: Используем v-else с v-if="uiState.isLoading" ниже, чтобы избежать гонки состояний -->
     <div v-if="selectedImageId && !uiState.isLoading" class="image-display-area" data-v-inspector="src/components/manual/ManualAnalysis.vue:20:5">
       <SimpleImage
         :image-url="imageState.originalUrl"
@@ -456,13 +455,6 @@ const objectsEqual = (a: Record<string, string>, b: Record<string, string>): boo
   return keysA.every(key => a[key] === b[key])
 }
 
-// РАЗДЕЛЕННЫЕ функции сохранения состояния (теперь не нужны, используем методы)
-// const saveLinesState = () => { ... }
-// const saveCellsState = () => { ... }
-
-// РАЗДЕЛЕННЫЕ функции сброса к сохраненному состоянию (теперь не нужны, используем методы)
-// const revertLinesToSavedState = () => { ... }
-// const revertCellsToSavedState = () => { ... }
 
 // Сброс состояния при смене изображения
 const resetComponentState = () => {

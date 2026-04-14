@@ -1,3 +1,6 @@
+import { KMEANS_URL as API_BASE_URL } from './config'
+import { blobToBase64 } from './utils'
+
 export type KMeansStatus = 'processing' | 'completed' | 'failed'
 
 export interface KMeansParameters {
@@ -25,10 +28,8 @@ export interface KMeansResult {
     epsilon?: number
     flags?: string
     
-    // Исправление здесь: добавляем оба варианта
-    colors?: Array<[number, number, number]>      // Новое поле (приходит из params)
-    colors_rgb?: Array<[number, number, number]>  // Старое поле (для совместимости)
-    
+    colors?: Array<[number, number, number]>
+
     centers_sorted?: number[]
     compactness?: number
     original_shape?: number[]
@@ -61,8 +62,6 @@ export interface KMeansStartResponse {
     colors: Array<[number, number, number]>
   }
 }
-
-const API_BASE_URL = 'http://localhost:8000/api/v1/analysis/kmeans'
 
 class KMeansAPI {
   /**
@@ -151,7 +150,7 @@ class KMeansAPI {
       }
 
       const blob = await response.blob()
-      const base64 = await this.blobToBase64(blob)
+      const base64 = await blobToBase64(blob)
       
       console.log(`K-Means result image loaded for image ${imageId}`)
       return base64
@@ -160,21 +159,6 @@ class KMeansAPI {
       console.error('Error getting K-Means result image:', error)
       return null
     }
-  }
-
-  private blobToBase64(blob: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        if (typeof reader.result === 'string') {
-          resolve(reader.result)
-        } else {
-          reject(new Error('Failed to convert blob to base64'))
-        }
-      }
-      reader.onerror = reject
-      reader.readAsDataURL(blob)
-    })
   }
 
   getBase64ImageUrl(base64: string): string {

@@ -57,6 +57,23 @@
   --transition-fast: 150ms ease;
   --transition-base: 250ms ease;
   --transition-slow: 350ms ease;
+
+  /* Производные семантические цвета (используются в компонентах) */
+  --error-bg: hsl(0, 84%, 96%);
+  --error-border: hsl(0, 84%, 82%);
+  --error-text: hsl(0, 84%, 35%);
+  --error-color-dark: hsl(0, 84%, 40%);
+
+  --success-bg: hsl(142, 76%, 95%);
+  --success-border: hsl(142, 76%, 75%);
+  --success-text: hsl(142, 76%, 25%);
+
+  --warning-bg: hsl(38, 92%, 95%);
+  --warning-border: hsl(38, 92%, 70%);
+  --warning-text: hsl(38, 92%, 30%);
+
+  --primary-color-light: hsl(220, 90%, 96%);
+  --primary-color-dark: hsl(220, 90%, 44%);
 }
 
 /* Темная тема

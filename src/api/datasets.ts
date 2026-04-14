@@ -1,3 +1,6 @@
+import { IO_URL as API_BASE_URL } from './config'
+import { pollUntilDone } from './utils'
+
 export interface Dataset {
   id: number
   title: string
@@ -47,8 +50,6 @@ export interface TaskStatusResponse {
   message: string
   error?: string
 }
-
-const API_BASE_URL = 'http://localhost:8000/api/v1/IO'
 
 class DatasetsAPI {
   async getDatasetsList(params: GetDatasetsListRequest): Promise<ResponseDatasetsList> {
@@ -137,33 +138,13 @@ class DatasetsAPI {
     const taskId = startData.task_id
 
     // 2. Опрос статуса (Polling)
-    const pollInterval = 1000
-    const maxAttempts = 60
-    let attempt = 0
+    await pollUntilDone<TaskStatusResponse>(
+      `${API_BASE_URL}/archive/status/${taskId}`,
+      'completed',
+      'failed'
+    )
 
-    while (attempt < maxAttempts) {
-      const statusResponse = await fetch(`${API_BASE_URL}/archive/status/${taskId}`)
-      
-      if (!statusResponse.ok) {
-        throw new Error(`Failed to check task status: ${statusResponse.status}`)
-      }
-
-      const statusData: TaskStatusResponse = await statusResponse.json()
-
-      if (statusData.status === 'completed') {
-        // Задача готова! Просто возвращаем ссылку.
-        return `${API_BASE_URL}/archive/download/${taskId}`
-      }
-
-      if (statusData.status === 'failed') {
-        throw new Error(statusData.error || 'Export task failed on server')
-      }
-
-      await new Promise(resolve => setTimeout(resolve, pollInterval))
-      attempt++
-    }
-
-    throw new Error('Export task timed out')
+    return `${API_BASE_URL}/archive/download/${taskId}`
   }
 
   async importDataset(file: File): Promise<ResultResponse> {

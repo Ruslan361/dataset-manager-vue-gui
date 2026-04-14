@@ -1,27 +1,67 @@
 <script setup lang="ts">
-import KMeansSettings from '@/components/settings/KMeansSettings.vue'
-import { ref, onMounted, computed, h } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import { datasetsAPI, type Dataset } from '@/api/datasets'
 import Header from '@/components/Header.vue'
+import KMeansSettings from '@/components/settings/KMeansSettings.vue'
 import OtherSettings from '@/components/settings/OtherSettings.vue'
-
+import ThemeSettings from '@/components/settings/ThemeSettings.vue'
 </script>
+
 <template>
   <div class="settings-view">
     <Header />
-    <main class="settings-view__main">
-      <div class="kmeans-settings-container">
-        <h2 class="settings-view__title">Настройки алгоритмов кластеризации</h2>
+    <main class="settings-main">
+
+      <section class="settings-section">
+        <h2 class="section-title">Алгоритм K-Means</h2>
         <KMeansSettings />
-      </div>
-      <div class="service-settings-container">
-        <h2 class="service-settings-container__title">Прочее</h2>
+      </section>
+
+      <section class="settings-section">
+        <h2 class="section-title">Тема оформления</h2>
+        <ThemeSettings />
+      </section>
+
+      <section class="settings-section settings-section--narrow">
+        <h2 class="section-title">Прочее</h2>
         <OtherSettings />
-      </div>
+      </section>
+
     </main>
   </div>
 </template>
-<style scoped></style>
 
+<style scoped>
+.settings-view {
+  min-height: 100vh;
+  background: var(--bg-color-secondary);
+}
+
+.settings-main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--spacing-xl) var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.settings-section {
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-large);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.settings-section--narrow {
+  max-width: 480px;
+}
+
+.section-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0 0 var(--spacing-lg);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color);
+}
+</style>

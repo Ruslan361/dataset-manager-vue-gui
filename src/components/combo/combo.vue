@@ -993,10 +993,10 @@ onUnmounted(() => {
 }
 
 .error-banner {
-  color: #9f2c2c;
-  background: #ffe9e9;
-  border: 1px solid #f0c4c4;
-  border-radius: 6px;
-  padding: 8px 10px;
+  color: var(--error-text);
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: var(--border-radius-small);
+  padding: var(--spacing-sm) var(--spacing-md);
 }
 </style>

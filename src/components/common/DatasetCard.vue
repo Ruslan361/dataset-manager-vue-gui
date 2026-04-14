@@ -235,7 +235,7 @@ const getPreviewImages = () => {
 }
 
 .delete-button:hover {
-  background-color: #dc2626;
+  background-color: var(--error-color-dark);
 }
 
 .export-button {

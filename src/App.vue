@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { RouterView } from 'vue-router'
+import { useThemeStore } from '@/stores/theme'
+
+const themeStore = useThemeStore()
+onMounted(() => themeStore.apply())
 </script>
 
 <template>
-  <RouterView />  <!-- Это позволит маршрутизации работать -->
+  <RouterView />
 </template>
-
-<style scoped>
-</style>

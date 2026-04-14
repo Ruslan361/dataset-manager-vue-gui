@@ -576,9 +576,9 @@ const getCentroidColor = (index: number): string => {
 }
 
 .error-message {
-  background-color: #fee2e2;
-  border: 1px solid #ef4444;
-  color: #b91c1c;
+  background-color: var(--error-bg);
+  border: 1px solid var(--error-border);
+  color: var(--error-text);
   padding: var(--spacing-md);
   border-radius: var(--border-radius);
 }
@@ -715,7 +715,7 @@ const getCentroidColor = (index: number): string => {
   padding: var(--spacing-md);
   display: flex;
   justify-content: center;
-  background-color: #f8fafc;
+  background-color: var(--bg-color-secondary);
 }
 
 /* Фон для контейнера с результатом K-Means */

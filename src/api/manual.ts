@@ -1,10 +1,6 @@
 import { reactive } from 'vue'
-
-export interface Line {
-  id: string
-  relativeX: number // от 0 до 1
-  relativeY: number // от 0 до 1
-}
+import { MANUAL_URL as API_BASE_URL } from './config'
+import { blobToBase64 } from './utils'
 
 export interface ManualLine {
   id: string
@@ -132,8 +128,6 @@ export interface ManualAnalysisState {
   isProcessing: boolean
 }
 
-const API_BASE_URL = 'http://localhost:8000/api/v1/analysis/manual'
-
 class ManualAnalysisAPI {
   // ИЗМЕНЕНО: Делаем хранилище состояний реактивным
   private analysisStates = reactive(new Map<number, ManualAnalysisState>())
@@ -213,7 +207,7 @@ class ManualAnalysisAPI {
       }
 
       const blob = await response.blob()
-      const base64 = await this.blobToBase64(blob)
+      const base64 = await blobToBase64(blob)
       state.blurredImageBase64 = base64
       
       console.log(`Blurred image loaded for ${imageId}`)
@@ -770,21 +764,6 @@ class ManualAnalysisAPI {
 
   private arraysEqual(a: number[], b: number[]): boolean {
     return a.length === b.length && a.every((val, i) => val === b[i])
-  }
-
-  private blobToBase64(blob: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        if (typeof reader.result === 'string') {
-          resolve(reader.result)
-        } else {
-          reject(new Error('Failed to convert blob to base64'))
-        }
-      }
-      reader.onerror = reject
-      reader.readAsDataURL(blob)
-    })
   }
 
   /**

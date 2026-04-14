@@ -13,8 +13,7 @@ export interface AutoCropRequest{
     image_id: number
 }
 
-// Сделал базовый URL до "crop" чтобы в вызовах не дублировать сегмент
-const API_BASE_URL = 'http://localhost:8000/api/v1/analysis/crop'
+import { CROP_URL as API_BASE_URL } from './config'
 
 class CropAPI {
     private async parseResult<T>(response: Response): Promise<T> {
