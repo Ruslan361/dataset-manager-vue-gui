@@ -284,7 +284,7 @@ const runKMeansForSelectedImages = async () => {
     return
   }
   if (isProcessing.value || isMassProcessing.value) return
-  if (!confirm(`Запустить K-Means для ${ids.length} выбранных изображений?`)) return
+  if (!confirm(`Запустить кластеризацию для ${ids.length} выбранных изображений?`)) return
 
   try {
     isMassProcessing.value = true
@@ -345,7 +345,7 @@ const getCentroidColor = (index: number): string => {
     <!-- Информация о выбранном изображении -->
     <div class="analysis-info">
       <div class="info-header">
-        <h4 class="section-title">K-Means кластеризация</h4>
+        <h4 class="section-title">Кластеризация</h4>
         <div style="display:flex; gap:8px; align-items:center;">
           <!-- Запуск для одного выбранного изображения -->
           <button
@@ -353,7 +353,7 @@ const getCentroidColor = (index: number): string => {
             @click="runKMeansAnalysis"
             class="reset-params-btn"
             :disabled="isProcessing"
-            title="Запустить K-Means для выбранного изображения"
+            title="Запустить кластеризацию для выбранного изображения"
           >
             ▶️ Запустить выбранное
           </button>
@@ -364,7 +364,7 @@ const getCentroidColor = (index: number): string => {
             @click="runKMeansForSelectedImages"
             class="reset-params-btn"
             :disabled="isMassProcessing || isProcessing"
-            title="Запустить K-Means для выбранных изображений"
+            title="Запустить кластеризацию для выбранных изображений"
           >
             ▶️ Запустить для выбранных ({{ selectedImageIds.length }})
           </button>
@@ -384,7 +384,7 @@ const getCentroidColor = (index: number): string => {
     <div v-if="isProcessing" class="processing-indicator">
       <div class="processing-spinner"></div>
       <div class="processing-text">
-        Выполняется K-Means кластеризация...
+        Выполняется кластеризация...
         <br>
         <small>Это может занять некоторое время</small>
       </div>
@@ -438,7 +438,7 @@ const getCentroidColor = (index: number): string => {
             ></div>
             <div class="centroid-info">
               <div class="centroid-name">Кластер {{ index + 1 }}</div>
-              <div class="centroid-value">L-канал: {{ centroid.toFixed(2) }}</div>
+              <div class="centroid-value">среднее значение: {{ centroid.toFixed(2) }} (у.е.)</div>
             </div>
           </div>
         </div>
@@ -723,7 +723,7 @@ const getCentroidColor = (index: number): string => {
   background-color: var(--bg-color-secondary);
 }
 
-/* Фон для контейнера с результатом K-Means */
+
 .image-container.result-container {
   background-color: #000;
 }
