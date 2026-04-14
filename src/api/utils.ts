@@ -24,7 +24,7 @@ export async function pollUntilDone<T extends { status: string; error?: string }
   failedStatus: string,
   options: PollOptions = {}
 ): Promise<T> {
-  const { interval = 1000, maxAttempts = 60 } = options
+  const { interval = 500, maxAttempts = 60 } = options
   let attempt = 0
 
   while (attempt < maxAttempts) {

@@ -147,7 +147,10 @@ const loadResultImage = async () => {
   
   try {
     isLoadingResultImage.value = true
-    const base64 = await kmeansAPI.getResultImageBase64(props.selectedImageId)
+    const base64 = await kmeansAPI.getResultImageBase64(
+      props.selectedImageId,
+      result.value?.result_id
+    )
     if (base64) {
       resultImageBase64.value = base64
     }

@@ -102,7 +102,13 @@ class KMeansAPI {
    */
   async getResult(imageId: number): Promise<KMeansResult | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/kmeans/${imageId}/result`)
+      const response = await fetch(`${API_BASE_URL}/kmeans/${imageId}/result`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          Pragma: 'no-cache'
+        }
+      })
       
       if (response.status === 404) {
         return null
@@ -136,9 +142,16 @@ class KMeansAPI {
   /**
    * Получение результирующего изображения в формате base64
    */
-  async getResultImageBase64(imageId: number): Promise<string | null> {
+  async getResultImageBase64(imageId: number, cacheKey?: number | string): Promise<string | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/kmeans/${imageId}/result/image`)
+      const cacheBuster = cacheKey ?? Date.now()
+      const response = await fetch(`${API_BASE_URL}/kmeans/${imageId}/result/image?cb=${encodeURIComponent(String(cacheBuster))}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          Pragma: 'no-cache'
+        }
+      })
       
       if (response.status === 404 || response.status === 400) {
         console.log(`Result image not available for image ${imageId} (status: ${response.status})`)

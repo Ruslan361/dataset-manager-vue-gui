@@ -249,7 +249,7 @@ const kmeansColors = computed<Array<[number, number, number]>>(() => {
   if (!kmeansResult.value) {
     return []
   }
-  return kmeansResult.value.result.colors_rgb || kmeansResult.value.result.colors || []
+  return kmeansResult.value.result.colors || []
 })
 
 const kmeansCenters = computed<number[]>(() => {
@@ -688,7 +688,10 @@ const startPollingForKMeans = () => {
       if (currentResult.status === 'completed') {
         stopPolling()
         isKMeansLoading.value = false
-        kmeansResultImageBase64.value = await kmeansAPI.getResultImageBase64(imageId.value)
+        kmeansResultImageBase64.value = await kmeansAPI.getResultImageBase64(
+          imageId.value,
+          currentResult.result_id
+        )
       }
 
       if (currentResult.status === 'failed') {
@@ -725,7 +728,10 @@ const ensureKMeansLoaded = async () => {
     kmeansResult.value = existingResult
 
     if (existingResult.status === 'completed') {
-      kmeansResultImageBase64.value = await kmeansAPI.getResultImageBase64(imageId.value)
+      kmeansResultImageBase64.value = await kmeansAPI.getResultImageBase64(
+        imageId.value,
+        existingResult.result_id
+      )
       isKMeansLoading.value = false
       return
     }
