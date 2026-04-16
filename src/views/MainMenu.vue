@@ -39,7 +39,7 @@ const loadDatasets = async () => {
     datasets.value = response.datasets
     await loadDatasetPreviews(response.datasets)
   } catch (err) {
-    error.value = 'Ошибка при загрузке датасетов'
+    error.value = 'Ошибка при загрузке документа'
     console.error('Error loading datasets:', err)
   } finally {
     isLoading.value = false
@@ -82,7 +82,7 @@ const loadDatasetPreviews = async (datasetsList: Dataset[]) => {
   datasetPreviews.value = nextPreviews
 }
 
-// Создание нового датасета
+// Создание нового документа
 const handleCreateDataset = async (datasetData: { title: string; description: string }) => {
   try {
     const result = await datasetsAPI.createDataset(datasetData)
@@ -91,10 +91,10 @@ const handleCreateDataset = async (datasetData: { title: string; description: st
       showCreateModal.value = false
       await loadDatasets()
     } else {
-      error.value = 'Ошибка при создании датасета'
+      error.value = 'Ошибка при создании документа'
     }
   } catch (err) {
-    error.value = 'Ошибка при создании датасета'
+    error.value = 'Ошибка при создании документа'
     console.error('Error creating dataset:', err)
   }
 }
@@ -122,17 +122,17 @@ const handleEditDataset = async (datasetData: { title: string; description: stri
       closeEditModal()
       await loadDatasets()
     } else {
-      error.value = 'Ошибка при обновлении датасета'
+      error.value = 'Ошибка при обновлении документа'
     }
   } catch (err) {
-    error.value = 'Ошибка при обновлении датасета'
+    error.value = 'Ошибка при обновлении документа'
     console.error('Error updating dataset:', err)
   }
 }
 
-// Удаление датасета
+// Удаление документа
 const handleDeleteDataset = async (id: number) => {
-  if (!confirm('Вы уверены, что хотите удалить этот датасет? Это действие нельзя отменить.')) {
+  if (!confirm('Вы уверены, что хотите удалить этот документ? Это действие нельзя отменить.')) {
     return
   }
 
@@ -142,15 +142,15 @@ const handleDeleteDataset = async (id: number) => {
     if (result.success) {
       await loadDatasets()
     } else {
-      error.value = 'Ошибка при удалении датасета'
+      error.value = 'Ошибка при удалении документа'
     }
   } catch (err) {
-    error.value = 'Ошибка при удалении датасета'
+    error.value = 'Ошибка при удалении документа'
     console.error('Error deleting dataset:', err)
   }
 }
 
-// Экспорт датасета
+// Экспорт документа
 const handleExportDataset = async (id: number) => {
   if (exportingId.value) return // Блокируем повторный клик
   
@@ -176,7 +176,7 @@ const handleExportDataset = async (id: number) => {
         // 1. Открываем системное диалоговое окно сохранения
         const filePath = await save({
           defaultPath: `dataset_${id}.zip`,
-          filters:[{ name: 'Архив датасета', extensions: ['zip'] }]
+          filters:[{ name: 'Архив документа', extensions: ['zip'] }]
         })
         
         if (filePath) {
@@ -212,7 +212,7 @@ const handleExportDataset = async (id: number) => {
     }
     
   } catch (err: any) {
-    error.value = err.message || 'Ошибка при экспорте датасета'
+    error.value = err.message || 'Ошибка при экспорте документа'
     console.error('Error exporting dataset:', err)
   } finally {
     exportingId.value = null
@@ -238,10 +238,10 @@ const onFileSelected = async (event: Event) => {
     if (result.success) {
       await loadDatasets()
     } else {
-      error.value = result.message || 'Ошибка при импорте датасета'
+      error.value = result.message || 'Ошибка при импорте документа'
     }
   } catch (err: any) {
-    error.value = err.message || 'Ошибка при импорте датасета'
+    error.value = err.message || 'Ошибка при импорте документа'
     console.error('Error importing dataset:', err)
   } finally {
     importLoading.value = false
@@ -290,7 +290,7 @@ onMounted(() => {
               @click="triggerFileInput"
               :disabled="isLoading || importLoading"
             >
-              {{ importLoading ? 'Импорт...' : 'Импортировать датасет' }}
+              {{ importLoading ? 'Импорт...' : 'Импортировать документ' }}
             </Button>
             <Button 
               variant="primary" 
@@ -354,7 +354,6 @@ onMounted(() => {
       </div>
     </main>
 
-    <!-- Модальное окно создания датасета -->
     <CreateDatasetModal
       :is-visible="showCreateModal"
       @close="closeCreateModal"

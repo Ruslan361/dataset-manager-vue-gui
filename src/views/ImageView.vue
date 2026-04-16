@@ -7,8 +7,8 @@ import Button from '@/components/common/Button.vue'
 import MarkupDropdown from '@/components/MarkupDropdown.vue'
 import Pagination from '@/components/Pagination.vue'
 import ImageUploadModal from '@/components/ImageUploadModal.vue'
-import MarkupImporter from '@/components/MarkupImporter.vue' // Импортируем новый компонент
-import { imagesAPI, type Image } from '@/api/images'
+import MarkupImporter from '@/components/MarkupImporter.vue' 
+import { imagesAPI, type Image, type ResultResponse } from '@/api/images'
 import { useOtherStore } from '@/stores/other'
 
 const otherStore = useOtherStore()
@@ -234,20 +234,31 @@ const handleImageUpload = async (files: FileList) => {
     // Показываем индикатор загрузки в модальном окне
     uploadModalRef.value?.setLoading(true)
     
-    // Преобразуем FileList в массив и загружаем каждый файл с его именем как title
-    const uploadPromises = Array.from(files).map(file => {
-      // Используем имя файла без расширения как title
-      const title = file.name.replace(/\.[^/.]+$/, "") // Удаляем расширение
-      
-      console.log(`Uploading file: ${file.name} with title: ${title}`)
-      
-      return imagesAPI.uploadImage(datasetId.value, file, title)
-    })
-    
-    const results = await Promise.all(uploadPromises)
-    
+    // Загружаем файлы батчами по 5, чтобы не перегружать SQLite параллельными write-транзакциями
+    const BATCH_SIZE = 5
+    const fileArray = Array.from(files)
+    const settled: PromiseSettledResult<ResultResponse>[] = []
+    let completed = 0
+
+    for (let i = 0; i < fileArray.length; i += BATCH_SIZE) {
+      const batch = fileArray.slice(i, i + BATCH_SIZE)
+      const batchResults = await Promise.allSettled(
+        batch.map(file => {
+          const title = file.name.replace(/\.[^/.]+$/, "")
+          return imagesAPI.uploadImage(datasetId.value, file, title)
+        })
+      )
+      settled.push(...batchResults)
+      completed += batch.length
+      uploadModalRef.value?.setProgress(Math.round((completed / fileArray.length) * 100))
+    }
+
+    const results = settled.map(r =>
+      r.status === 'fulfilled' ? r.value : { success: false, message: r.reason?.message || 'Upload failed' }
+    )
+
     console.log('Upload results:', results)
-    
+
     const successCount = results.filter(r => r.success).length
     const failCount = results.length - successCount
     

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onUnmounted } from 'vue'
 import Button from '@/components/common/Button.vue'
 
 interface Props {
@@ -162,6 +162,7 @@ const resetForm = () => {
   uploadError.value = null
   uploadProgress.value = 0
   currentFileName.value = ''
+  revokePreviewUrls()
   if (fileInput.value) {
     fileInput.value.value = ''
   }
@@ -186,9 +187,22 @@ const isImageFile = (file: File): boolean => {
   return file.type.startsWith('image/')
 }
 
+const previewUrls = new Map<string, string>()
+
 const getPreviewUrl = (file: File): string => {
-  return URL.createObjectURL(file)
+  const key = `${file.name}-${file.size}`
+  if (!previewUrls.has(key)) {
+    previewUrls.set(key, URL.createObjectURL(file))
+  }
+  return previewUrls.get(key)!
 }
+
+const revokePreviewUrls = () => {
+  previewUrls.forEach(url => URL.revokeObjectURL(url))
+  previewUrls.clear()
+}
+
+onUnmounted(revokePreviewUrls)
 
 const getFileDisplayName = (file: File): string => {
   // Убираем расширение из имени файла для отображения

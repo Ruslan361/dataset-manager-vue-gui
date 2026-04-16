@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted, onMounted } from 'vue' // Добавлен onMounted
+import { ref, computed, watch, onUnmounted, onMounted } from 'vue' 
 import { imagesAPI } from '@/api/images'
 import { kmeansAPI, type KMeansParameters as KMeansParams, type KMeansResult } from '@/api/kmeans'
 import { useKMeansStore } from '@/stores/kmeans'
@@ -7,7 +7,7 @@ import { useKMeansStore } from '@/stores/kmeans'
 interface Props {
   selectedImageId: number | null
   datasetId: number
-  selectedImageIds?: number[] // <-- optional array of selected image IDs
+  selectedImageIds?: number[] 
 }
 
 const props = defineProps<Props>()
