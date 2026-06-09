@@ -34,6 +34,8 @@ export interface KMeansResult {
     compactness?: number
     original_shape?: number[]
     processed_pixels?: number
+    cluster_ranges?: Array<{ min: number; max: number; range: number }>
+    cluster_std_dev?: number[]
     
     // Для ресурсов
     resources?: Array<{

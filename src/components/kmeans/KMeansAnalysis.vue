@@ -331,12 +331,18 @@ const dismissError = () => {
 
 const getCentroidColor = (index: number): string => {
   if (!result.value || !result.value.result) return 'transparent'
-
-
   const colors = result.value.result.colors
   if (!colors || !colors[index]) return 'transparent'
   const [r, g, b] = colors[index]
   return `rgb(${r}, ${g}, ${b})`
+}
+
+const getClusterRange = (index: number) => {
+  return result.value?.result?.cluster_ranges?.[index] ?? null
+}
+
+const getClusterStdDev = (index: number) => {
+  return result.value?.result?.cluster_std_dev?.[index] ?? null
 }
 </script>
 
@@ -438,7 +444,19 @@ const getCentroidColor = (index: number): string => {
             ></div>
             <div class="centroid-info">
               <div class="centroid-name">Кластер {{ index + 1 }}</div>
-              <div class="centroid-value">среднее значение: {{ centroid.toFixed(2) }} (у.е.)</div>
+              <div class="centroid-value">среднее: {{ centroid.toFixed(2) }} (у.е.)</div>
+              <template v-if="getClusterRange(index)">
+                <div class="centroid-value">
+                  мин: {{ getClusterRange(index)!.min.toFixed(2) }} &nbsp;·&nbsp;
+                  макс: {{ getClusterRange(index)!.max.toFixed(2) }} &nbsp;·&nbsp;
+                  размах: {{ getClusterRange(index)!.range.toFixed(2) }}
+                </div>
+              </template>
+              <template v-if="getClusterStdDev(index) !== null">
+                <div class="centroid-value">
+                  СКО: {{ getClusterStdDev(index)!.toFixed(2) }}
+                </div>
+              </template>
             </div>
           </div>
         </div>
