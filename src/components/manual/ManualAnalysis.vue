@@ -584,28 +584,45 @@ const calculateMean = async () => {
     
     const result = await manualAnalysisAPI.calculateMeanLines(imageId.value)
     const categorizedRes = await manualAnalysisAPI.getCategorizedMeanResult(imageId.value)
-    
+
     console.log('Received result from API:', result)
-    
+
     serverResult.value = result
     tableState.rows = result.brightness_data.length
     tableState.cols = result.brightness_data[0]?.length || 0
     tableState.data = result.brightness_data
-    
+
     // Обновляем размеры блоков
     const state = manualAnalysisAPI.getAnalysisState(imageId.value)
     if (state.imageDimensions) {
       tableState.yBlockSize = Math.round(state.imageDimensions.height / tableState.rows)
       tableState.xBlockSize = Math.round(state.imageDimensions.width / tableState.cols)
     }
-    
+
     // Синхронизируем линии
     linesState.horizontal = [...state.currentLines.horizontal]
     linesState.vertical = [...state.currentLines.vertical]
-    
+
     // Сохраняем состояние линий
     linesState.save()
-    
+
+    // Восстанавливаем выделения ячеек из сохранённого категоризованного результата.
+    // Ячейки, вышедшие за пределы новой сетки, отбрасываем.
+    if (categorizedRes?.categoryResults) {
+      const restoredSelections: Record<string, string> = {}
+      categorizedRes.categoryResults.forEach(categoryResult => {
+        categoryResult.cells?.forEach(cell => {
+          if (cell.row < tableState.rows && cell.col < tableState.cols) {
+            restoredSelections[`${cell.row}-${cell.col}`] = categoryResult.categoryId
+          }
+        })
+      })
+      cellsState.current = restoredSelections
+    } else {
+      cellsState.current = {}
+    }
+    cellsState.save()
+
     console.log('Mean calculation completed successfully')
     
   } catch (error) {
@@ -835,10 +852,10 @@ const updateTableAfterImageChange = async () => {
         cellsState.current = tableUpdate.cellSelections
       } else {
         cellsState.current = {}
+      }
 
       console.log('Table state updated reactively')
     }
-  }
   } catch (error) {
     console.error('Error updating table:', error)
   }

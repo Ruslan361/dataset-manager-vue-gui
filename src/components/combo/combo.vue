@@ -111,7 +111,7 @@
                       ></span>
                       <div class="cluster-meta">
                         <div><b>Кластер {{ row.clusterIndex + 1 }}</b></div>
-                        <div>Среднее значение: {{ row.intensityCenter ?? '-' }} (у.е)</div>
+                        <div>Среднее: {{ row.intensityCenter ?? '-' }} (у.е)</div>
                         <div>
                           Доля изображения:
                           {{
@@ -120,6 +120,13 @@
                             : '-'
                           }}
                         </div>
+                        <template v-if="row.rangeMin != null">
+                          <div>Мин: {{ row.rangeMin }} · Макс: {{ row.rangeMax }}</div>
+                          <div>Размах: {{ row.rangeSpan }}</div>
+                        </template>
+                        <template v-if="row.stdDev != null">
+                          <div>СКО: {{ row.stdDev }}</div>
+                        </template>
                       </div>
                     </div>
                   </div>
@@ -183,6 +190,10 @@ interface ClusterRow {
   color: [number, number, number] | null
   intensityCenter: string | null
   pixelCount: number | null
+  rangeMin: string | null
+  rangeMax: string | null
+  rangeSpan: string | null
+  stdDev: string | null
 }
 
 interface WindowRect {
@@ -266,12 +277,18 @@ const kmeansClusterRows = computed<ClusterRow[]>(() => {
   for (let index = 0; index < maxCount; index += 1) {
     const clusterStat = clusterPixelStats.value.find((item) => item.clusterIndex === index)
     const intensityValue = kmeansCenters.value[index]
+    const rangeEntry = kmeansResult.value?.result?.cluster_ranges?.[index] ?? null
+    const stdValue = kmeansResult.value?.result?.cluster_std_dev?.[index]
 
     rows.push({
       clusterIndex: index,
       color: kmeansColors.value[index] || null,
       intensityCenter: typeof intensityValue === 'number' ? intensityValue.toFixed(2) : null,
-      pixelCount: clusterStat ? clusterStat.pixelCount : null
+      pixelCount: clusterStat ? clusterStat.pixelCount : null,
+      rangeMin: rangeEntry ? rangeEntry.min.toFixed(2) : null,
+      rangeMax: rangeEntry ? rangeEntry.max.toFixed(2) : null,
+      rangeSpan: rangeEntry ? rangeEntry.range.toFixed(2) : null,
+      stdDev: typeof stdValue === 'number' ? stdValue.toFixed(2) : null,
     })
   }
 

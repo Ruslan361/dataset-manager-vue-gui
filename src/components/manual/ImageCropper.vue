@@ -25,7 +25,6 @@
       <button @click="auto" :disabled="!props.selectedImageId">Авто</button>
       <button @click="localClear">Очистить</button>
       <button @click="apply" :disabled="!lastCanvas || !props.selectedImageId">Применить</button>
-      <button @click="$emit('close')">Закрыть</button>
     </div>
   </div>
 </template>
