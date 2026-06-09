@@ -14,13 +14,13 @@ const getStatusText = (status: UserStatus) => {
 <template>
   <header class="header">
     <div class="header__container">
-      <!-- Логотип и название -->
+      
       <div class="header__brand">
         <img v-if="APP_CONFIG.logo" :src="APP_CONFIG.logo" :alt="APP_CONFIG.name" class="header__logo">
         <h1 class="header__title">{{ APP_CONFIG.name }}</h1>
       </div>
 
-      <!-- Навигация -->
+      
       <nav class="header__nav">
         <RouterLink to="/" class="header__nav-link" active-class="header__nav-link--active">
             Мои документы

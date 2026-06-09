@@ -23,7 +23,7 @@
       </span>
     </Button>
 
-    <!-- Окно с результатами импорта -->
+    
     <div v-if="importResults.length > 0" class="results-overlay" @click="clearResults">
       <div class="results-modal" @click.stop>
         <h4>Результаты импорта</h4>
@@ -79,12 +79,10 @@ const handleFileSelect = async (event: Event) => {
   isImporting.value = false
   importResults.value = results
 
-  // Сбрасываем input, чтобы можно было выбрать тот же файл снова
   if (fileInput.value) {
     fileInput.value.value = ''
   }
 
-  // Сообщаем родителю, что нужно обновить список
   if (results.some(r => r.success)) {
     emit('import-completed')
   }

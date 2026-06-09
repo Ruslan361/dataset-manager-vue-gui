@@ -1,6 +1,6 @@
 export const APP_CONFIG = {
     name: 'Атрофовизуализация',
-    logo: '/logo2.png' // путь к логотипу в папке public
+    logo: '/logo2.png'
   } as const
 
   export const ASSETS = {

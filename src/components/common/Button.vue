@@ -54,8 +54,6 @@ const handleClick = (event: MouseEvent) => {
   transform: translateY(-1px);
   opacity: 0.9;
 }
-
-/* Размеры */
 .btn--small {
   padding: 6px 12px;
   font-size: var(--font-size-sm, 14px);
@@ -70,8 +68,6 @@ const handleClick = (event: MouseEvent) => {
   padding: 16px 32px;
   font-size: var(--font-size-lg, 18px);
 }
-
-/* Варианты */
 .btn--primary {
   background: var(--primary-color, #3b82f6);
   color: var(--text-color-button, #ffffff);

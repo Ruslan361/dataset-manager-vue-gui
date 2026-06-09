@@ -22,28 +22,22 @@ const getKMeansParameters = (): KMeansParams => ({
   colors: [...kmeansStore.getParameters.colors]
 })
 
-// Состояние анализа
 const isProcessing = ref(false)
 const isMassProcessing = ref(false)
 const result = ref<KMeansResult | null>(null)
 const error = ref<string | null>(null)
 
-// Base64 изображения
 const originalImageBase64 = ref<string | null>(null)
 const resultImageBase64 = ref<string | null>(null)
 const isLoadingOriginalImage = ref(false)
 const isLoadingResultImage = ref(false)
 
-// Состояния UI
 const isParametersExpanded = ref(true)
 const isOriginalImageCollapsed = ref(false)
 const isResultImageCollapsed = ref(false)
 
-// Polling
 const pollingInterval = ref<number | null>(null)
 const POLLING_DELAY = 2000
-
-// --- Computed ---
 
 const canAnalyze = computed(() => 
   props.selectedImageId !== null && !isProcessing.value
@@ -61,16 +55,12 @@ const getResultImageUrl = computed(() => {
   return resultImageBase64.value || null
 })
 
-// --- Watchers ---
-
-// Сворачиваем параметры при успехе
 watch(hasResult, (newHasResult) => {
   if (newHasResult) {
     isParametersExpanded.value = false
   }
 })
 
-// Реагируем на смену ID изображения
 watch(() => props.selectedImageId, (newId) => {
   if (newId) {
     initData()
@@ -79,10 +69,7 @@ watch(() => props.selectedImageId, (newId) => {
   }
 })
 
-// --- Lifecycle ---
-
 onMounted(() => {
-  // Загружаем данные при монтировании компонента (переключение вкладок)
   if (props.selectedImageId) {
     initData()
   }
@@ -92,20 +79,15 @@ onUnmounted(() => {
   stopPolling()
 })
 
-// --- Methods ---
-
 /**
  * Инициализация данных для текущего изображения
  * Объединяет сброс состояния и загрузку новых данных
  */
 const initData = async () => {
-  // 1. Сбрасываем старое состояние
   resetState()
   
   if (!props.selectedImageId) return
 
-  // 2. Запускаем загрузку параллельно
-  // Это решает проблему, когда результат есть, а оригинал не грузится
   await Promise.all([
     loadOriginalImage(),
     checkExistingResult()
@@ -133,7 +115,6 @@ const loadOriginalImage = async () => {
     originalImageBase64.value = base64
   } catch (err) {
     console.error('Error loading original image:', err)
-    // Не блокируем UI ошибкой загрузки картинки, просто логируем
   } finally {
     isLoadingOriginalImage.value = false
   }
@@ -173,12 +154,10 @@ const checkExistingResult = async () => {
     if (existingResult) {
       result.value = existingResult
       
-      // Восстанавливаем параметры из результата для UI
       if (existingResult.result) {
         if (existingResult.result.nclusters) {
           updateKMeansParameters({ nclusters: existingResult.result.nclusters })
         }
-        // Восстанавливаем другие параметры по желанию...
       }
       
       if (existingResult.status === 'completed') {
@@ -196,9 +175,6 @@ const checkExistingResult = async () => {
     console.debug('No existing result or check failed', err)
   }
 }
-
-// ... Остальные методы (startPolling, stopPolling, runKMeansAnalysis и т.д.) остаются без изменений ...
-// ... Не забудьте функцию getCentroidColor из предыдущего ответа ...
 
 const startPolling = () => {
   if (pollingInterval.value) return
@@ -228,7 +204,6 @@ const startPolling = () => {
         }
       }
     } catch (err) {
-      // Игнорируем ошибки сети при поллинге, чтобы не пугать юзера, если моргнул инет
       console.warn('Polling check failed', err)
     }
   }, POLLING_DELAY)
@@ -259,8 +234,6 @@ const runKMeansAnalysis = async () => {
     
     const response = await kmeansAPI.runAnalysis(props.selectedImageId, parameters)
     
-    // Временная заглушка для мгновенного отклика UI
-    // @ts-ignore
     result.value = {
       image_id: response.image_id,
       result_id: response.result_id,
@@ -348,12 +321,12 @@ const getClusterStdDev = (index: number) => {
 
 <template>
   <div class="kmeans-analysis">
-    <!-- Информация о выбранном изображении -->
+    
     <div class="analysis-info">
       <div class="info-header">
         <h4 class="section-title">Кластеризация</h4>
         <div style="display:flex; gap:8px; align-items:center;">
-          <!-- Запуск для одного выбранного изображения -->
+          
           <button
             v-if="selectedImageId"
             @click="runKMeansAnalysis"
@@ -364,7 +337,7 @@ const getClusterStdDev = (index: number) => {
             ▶️ Запустить выбранное
           </button>
 
-          <!-- Массовый запуск для выбранных в роуте изображений -->
+          
           <button
             v-if="selectedImageIds && selectedImageIds.length"
             @click="runKMeansForSelectedImages"
@@ -386,7 +359,7 @@ const getClusterStdDev = (index: number) => {
       </div>
     </div>
 
-    <!-- Индикатор загрузки -->
+    
     <div v-if="isProcessing" class="processing-indicator">
       <div class="processing-spinner"></div>
       <div class="processing-text">
@@ -396,7 +369,7 @@ const getClusterStdDev = (index: number) => {
       </div>
     </div>
 
-    <!-- Сообщение об ошибке -->
+    
     <div v-if="error" class="error-message">
       <div class="error-content">
         <span class="error-icon">❌</span>
@@ -405,12 +378,12 @@ const getClusterStdDev = (index: number) => {
       </div>
     </div>
 
-    <!-- Результаты анализа (ТОЛЬКО ЕСЛИ ГОТОВЫ) -->
-    <!-- Изменено: v-if="result" -> v-if="hasResult" чтобы избежать ошибок доступа к undefined полям -->
+    
+    
     <div v-if="hasResult && result" class="results-section">
       <h5 class="results-title">Результаты анализа</h5>
       
-      <!-- Статистика -->
+      
       <div class="result-stats">
         <div class="stat-item">
           <span class="stat-label">Кластеров:</span>
@@ -426,7 +399,7 @@ const getClusterStdDev = (index: number) => {
         </div>
       </div>
 
-      <!-- Центроиды -->
+      
        <div class="centroids-section">
         <h6 class="centroids-title">Центроиды кластеров:</h6>
         <div class="centroids-list">
@@ -435,7 +408,7 @@ const getClusterStdDev = (index: number) => {
             :key="index"
             class="centroid-item"
           >
-            <!-- ИСПРАВЛЕНО: Используем функцию вместо сложной логики в шаблоне -->
+            
             <div
               class="centroid-color"
               :style="{ 
@@ -462,9 +435,9 @@ const getClusterStdDev = (index: number) => {
         </div>
       </div>
 
-      <!-- Сравнение изображений -->
+      
       <div class="images-comparison">
-        <!-- Оригинальное изображение -->
+        
         <div class="image-section">
           <div 
             class="image-header" 
@@ -491,7 +464,7 @@ const getClusterStdDev = (index: number) => {
           </div>
         </div>
 
-        <!-- Результирующее изображение -->
+        
         <div class="image-section">
           <div 
             class="image-header" 
@@ -523,7 +496,6 @@ const getClusterStdDev = (index: number) => {
 </template>
 
 <style scoped>
-/* Стили остаются без изменений */
 .kmeans-analysis {
   display: flex;
   flex-direction: column;
@@ -740,7 +712,6 @@ const getClusterStdDev = (index: number) => {
   justify-content: center;
   background-color: var(--bg-color-secondary);
 }
-
 
 .image-container.result-container {
   background-color: #000;

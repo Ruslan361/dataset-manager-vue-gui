@@ -93,7 +93,7 @@ onMounted(() => {
     
     <main class="main-content">
       <div class="container">
-        <!-- Заголовок -->
+        
         <div class="analysis-header">
           <Button 
             variant="secondary"
@@ -110,7 +110,7 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Сообщение об ошибке -->
+        
         <div v-if="error" class="error-message">
           {{ error }}
           <Button 
@@ -122,15 +122,15 @@ onMounted(() => {
           </Button>
         </div>
 
-        <!-- Индикатор загрузки -->
+        
         <div v-if="isLoading" class="loading">
           <div class="loading-spinner"></div>
           <span>Загрузка изображений...</span>
         </div>
 
-        <!-- Основной интерфейс анализа -->
+        
         <div v-else-if="images.length > 0" class="analysis-layout" :class="{ 'panel-collapsed': isImagePanelCollapsed }">
-          <!-- Левая панель с лентой изображений -->
+          
           <div class="left-panel" :class="{ collapsed: isImagePanelCollapsed }">
             <div class="panel-header" @click="toggleImagePanel">
               <h3 class="panel-title">
@@ -154,17 +154,11 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- Правая панель с вкладками анализа -->
+          
           <div class="right-panel">
-            <!-- Вкладки -->
+            
             <div class="tabs">
-              <!-- <button
-                class="tab"
-                :class="{ active: activeTab === 'kmeans' }"
-                @click="setActiveTab('kmeans')"
-              >
-                Кластеризация
-              </button> -->
+              
               <button
                 class="tab"
                 :class="{ active: activeTab === 'manual' }"
@@ -172,29 +166,11 @@ onMounted(() => {
               >
                 Ручной анализ
               </button>
-              <!-- <button
-                class="tab"
-                :class="{ active: activeTab === 'crop' }"
-                @click="setActiveTab('crop')"
-              >
-                Обрезка изображения
-              </button>
-              <button
-                class="tab"
-                :class="{ active: activeTab === 'combo' }"
-                @click="setActiveTab('combo')"
-              >
-                Комбинированный анализ
-              </button> -->
+              
             </div>
-            <!-- Содержимое вкладок -->
+            
             <div class="tab-content">
-              <!-- <KMeansAnalysis
-                v-if="activeTab === 'kmeans'"
-                :selected-image-id="selectedImageId"
-                :selected-image-ids="imageIds"
-                :dataset-id="datasetId"
-              /> -->
+              
 
               <ManualAnalysis
                 v-if="activeTab === 'manual'"
@@ -202,23 +178,13 @@ onMounted(() => {
                 :dataset-id="datasetId"
               />
 
-              <!-- <ImageCropper
-                v-else-if="activeTab === 'crop'"
-                :selected-image-id="selectedImageId"
-                :dataset-id="datasetId"
-              />
-
-              <Combo
-                v-else-if="activeTab === 'combo'"
-                :selected-image-id="selectedImageId"
-                :dataset-id="datasetId"
-              /> -->
+              
 
             </div>
           </div>
         </div>
 
-        <!-- Пустое состояние -->
+        
         <div v-else-if="!isLoading" class="empty-state">
           <div class="empty-state__icon">📊</div>
           <h3>Нет изображений для анализа</h3>
@@ -243,20 +209,20 @@ onMounted(() => {
 }
 
 .main-content {
-  padding: var(--spacing-md) 0; /* Уменьшено с xl */
+  padding: var(--spacing-md) 0;
 }
 
 .container {
   max-width: 1600px;
   margin: 0 auto;
-  padding: 0 var(--spacing-md); /* Уменьшено с lg */
+  padding: 0 var(--spacing-md);
 }
 
 .analysis-header {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md); /* Уменьшено с lg */
-  margin-bottom: var(--spacing-lg); /* Уменьшено с xl */
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
 }
 
 .title-section {
@@ -264,10 +230,10 @@ onMounted(() => {
 }
 
 .page-title {
-  font-size: var(--font-size-xl); /* Уменьшено с 2xl */
+  font-size: var(--font-size-xl);
   font-weight: 700;
   color: var(--text-color);
-  margin: 0 0 var(--spacing-xs) 0; /* Уменьшен отступ снизу */
+  margin: 0 0 var(--spacing-xs) 0;
 }
 
 .header-info {
@@ -282,19 +248,19 @@ onMounted(() => {
 
 .analysis-layout {
   display: grid;
-  grid-template-columns: 240px 1fr; /* Уменьшено с 300px */
-  gap: var(--spacing-md); /* Уменьшено с xl */
-  height: calc(100vh - 160px); /* Уменьшено с 200px */
+  grid-template-columns: 240px 1fr;
+  gap: var(--spacing-md);
+  height: calc(100vh - 160px);
   transition: grid-template-columns 0.3s ease;
 }
 
 .analysis-layout.panel-collapsed {
-  grid-template-columns: 50px 1fr; /* Свернутая ширина */
+  grid-template-columns: 50px 1fr;
 }
 
 .left-panel, .right-panel {
   background-color: var(--bg-color);
-  border-radius: var(--border-radius); /* Уменьшено с large */
+  border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
   overflow: hidden;
 }
@@ -311,13 +277,13 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-sm) var(--spacing-md); /* Уменьшено с lg */
+  padding: var(--spacing-sm) var(--spacing-md);
   background-color: var(--bg-color-secondary);
   border-bottom: 1px solid var(--border-color);
   cursor: pointer;
   user-select: none;
   transition: background-color 0.2s ease;
-  min-height: 48px; /* Уменьшено */
+  min-height: 48px;
 }
 
 .panel-header:hover {
@@ -325,7 +291,7 @@ onMounted(() => {
 }
 
 .panel-title {
-  font-size: var(--font-size-base); /* Уменьшено с lg */
+  font-size: var(--font-size-base);
   font-weight: 600;
   color: var(--text-color);
   margin: 0;
@@ -383,10 +349,10 @@ onMounted(() => {
 
 .tab {
   flex: 1;
-  padding: var(--spacing-sm) var(--spacing-md); /* Уменьшено */
+  padding: var(--spacing-sm) var(--spacing-md);
   background: none;
   border: none;
-  font-size: var(--font-size-sm); /* Уменьшено */
+  font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--text-color-secondary);
   cursor: pointer;
@@ -406,17 +372,17 @@ onMounted(() => {
 }
 
 .tab-content {
-  padding: var(--spacing-md); /* Уменьшено с lg */
-  height: calc(100% - 44px); /* Уменьшено */
+  padding: var(--spacing-md);
+  height: calc(100% - 44px);
   overflow-y: auto;
 }
 
 .error-message {
   background-color: var(--error-color);
   color: white;
-  padding: var(--spacing-sm); /* Уменьшено */
+  padding: var(--spacing-sm);
   border-radius: var(--border-radius);
-  margin-bottom: var(--spacing-md); /* Уменьшено */
+  margin-bottom: var(--spacing-md);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -428,15 +394,15 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-lg); /* Уменьшено */
+  padding: var(--spacing-lg);
   color: var(--text-color-secondary);
-  font-size: var(--font-size-base); /* Уменьшено */
-  gap: var(--spacing-sm); /* Уменьшено */
+  font-size: var(--font-size-base);
+  gap: var(--spacing-sm);
 }
 
 .loading-spinner {
-  width: 32px; /* Уменьшено */
-  height: 32px; /* Уменьшено */
+  width: 32px;
+  height: 32px;
   border: 3px solid var(--border-color);
   border-top: 3px solid var(--primary-color);
   border-radius: 50%;
@@ -450,29 +416,29 @@ onMounted(() => {
 
 .empty-state {
   text-align: center;
-  padding: var(--spacing-lg); /* Уменьшено */
+  padding: var(--spacing-lg);
   background-color: var(--bg-color);
   border-radius: var(--border-radius);
   border: 2px dashed var(--border-color);
-  margin: var(--spacing-lg) 0; /* Уменьшено */
+  margin: var(--spacing-lg) 0;
 }
 
 .empty-state__icon {
-  font-size: 48px; /* Уменьшено */
-  margin-bottom: var(--spacing-sm); /* Уменьшено */
+  font-size: 48px;
+  margin-bottom: var(--spacing-sm);
   opacity: 0.5;
 }
 
 .empty-state h3 {
   color: var(--text-color);
   margin-bottom: var(--spacing-sm);
-  font-size: var(--font-size-lg); /* Уменьшено */
+  font-size: var(--font-size-lg);
 }
 
 .empty-state p {
   color: var(--text-color-secondary);
-  margin-bottom: var(--spacing-md); /* Уменьшено */
-  font-size: var(--font-size-sm); /* Уменьшено */
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-sm);
 }
 
 @media (max-width: 1024px) {
@@ -505,15 +471,11 @@ onMounted(() => {
     padding: var(--spacing-sm) 0;
   }
 }
-
-/* Анимация для плавного сворачивания */
 @media (prefers-reduced-motion: no-preference) {
   .analysis-layout {
     transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
-
-/* Для пользователей с ограниченной анимацией */
 @media (prefers-reduced-motion: reduce) {
   .analysis-layout,
   .left-panel,

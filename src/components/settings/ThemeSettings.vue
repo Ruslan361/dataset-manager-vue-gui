@@ -5,7 +5,6 @@ import Button from '@/components/common/Button.vue'
 
 const themeStore = useThemeStore()
 
-// Группы переменных для отображения
 interface VarItem {
   key: ThemeKey
   label: string
@@ -46,7 +45,6 @@ function onColorInput(key: ThemeKey, event: Event) {
 
 function onSizeInput(key: ThemeKey, event: Event) {
   const raw = (event.target as HTMLInputElement).value.trim()
-  // Допускаем числа (трактуем как px) и строки с единицами
   const value = /^\d+$/.test(raw) ? `${raw}px` : raw
   themeStore.setVar(key, value)
 }

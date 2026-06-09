@@ -10,7 +10,6 @@ const userStore = useUserStore()
 const name = ref('')
 const status = ref<UserStatus>(UserStatus.DEV)
 
-
 const saveUser = () => {
   if (name.value.trim()) {
     userStore.setUser({

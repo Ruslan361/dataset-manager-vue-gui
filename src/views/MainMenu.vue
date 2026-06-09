@@ -246,7 +246,7 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Сообщение об ошибке -->
+        
         <div v-if="error" class="error-message">
           {{ error }}
           <Button 
@@ -258,12 +258,12 @@ onMounted(() => {
           </Button>
         </div>
 
-        <!-- Индикатор загрузки -->
+        
         <div v-if="isLoading" class="loading">
           Загрузка документов...
         </div>
 
-        <!-- Список документов -->
+        
         <div v-else-if="datasets.length > 0" class="datasets-grid">
           <DatasetCard
             v-for="dataset in datasets"
@@ -282,7 +282,7 @@ onMounted(() => {
           />
         </div>
 
-        <!-- Пустое состояние -->
+        
         <div v-else-if="!isLoading" class="empty-state">
           <h3>У вас пока нет документов</h3>
           <p>Создайте первый документ, чтобы начать работу</p>

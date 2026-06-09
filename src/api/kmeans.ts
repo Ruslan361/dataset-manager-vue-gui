@@ -37,7 +37,6 @@ export interface KMeansResult {
     cluster_ranges?: Array<{ min: number; max: number; range: number }>
     cluster_std_dev?: number[]
     
-    // Для ресурсов
     resources?: Array<{
       type: string
       key: string
@@ -126,7 +125,6 @@ class KMeansAPI {
 
       const data = await response.json()
       
-      // Логируем только если статус изменился или завершен
       if (data.status !== 'processing') {
          console.log('K-Means result retrieved:', data)
       }

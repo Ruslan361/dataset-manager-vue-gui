@@ -55,7 +55,6 @@ const handleAnalysis = () => {
   closeDropdown()
 }
 
-// Закрываем dropdown при клике вне его
 const handleClickOutside = (event: Event) => {
   if (isOpen.value) {
     const target = event.target as Element
@@ -66,7 +65,6 @@ const handleClickOutside = (event: Event) => {
   }
 }
 
-// Добавляем обработчик при монтировании
 import { onMounted, onUnmounted } from 'vue'
 
 onMounted(() => {
