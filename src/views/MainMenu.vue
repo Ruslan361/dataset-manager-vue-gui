@@ -152,78 +152,20 @@ const handleDeleteDataset = async (id: number) => {
 
 // Экспорт документа
 const handleExportDataset = async (id: number) => {
-  if (exportingId.value) return // Блокируем повторный клик
+  if (exportingId.value) return
 
   exportingId.value = id
 
   try {
     const downloadUrl = await datasetsAPI.exportDataset(id)
-
-    const isTauri = typeof window !== 'undefined' && (window as any).__TAURI__ !== undefined
-
-    if (isTauri) {
-      // Шаг 1: открываем диалог сохранения (файл ещё не скачан)
-      let filePath: string | null = null
-      try {
-        const { save } = await import('@tauri-apps/plugin-dialog')
-        filePath = await save({
-          defaultPath: `dataset_${id}.zip`,
-          filters: [{ name: 'Архив документа', extensions: ['zip'] }],
-        })
-      } catch (dialogErr) {
-        console.warn('Tauri dialog error:', dialogErr)
-        // Диалог недоступен — скачиваем через WebView
-        filePath = null
-      }
-
-      // Шаг 2: скачиваем файл с бэкенда (однократно — после этого файл удаляется на сервере)
-      const response = await fetch(downloadUrl)
-      if (!response.ok) throw new Error(`Ошибка при скачивании файла: ${response.status}`)
-      const arrayBuffer = await response.arrayBuffer()
-
-      // Шаг 3: сохраняем данные
-      if (filePath) {
-        // Пользователь выбрал путь — пишем через Tauri FS
-        try {
-          const { writeFile } = await import('@tauri-apps/plugin-fs')
-          await writeFile(filePath, new Uint8Array(arrayBuffer))
-        } catch (writeErr) {
-          // writeFile не смог записать — сохраняем через Blob (данные уже в памяти)
-          console.warn('Tauri writeFile error, fallback to Blob download:', writeErr)
-          _saveBlobLocally(arrayBuffer, `dataset_${id}.zip`)
-        }
-      } else {
-        // Диалог не открылся или отменён — сохраняем через Blob
-        _saveBlobLocally(arrayBuffer, `dataset_${id}.zip`)
-      }
-    } else {
-      // Обычный браузер
-      const a = document.createElement('a')
-      a.href = downloadUrl
-      a.download = `dataset_${id}.zip`
-      a.target = '_blank'
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-    }
+    const { open } = await import('@tauri-apps/plugin-shell')
+    await open(downloadUrl)
   } catch (err: any) {
     error.value = err.message || 'Ошибка при экспорте документа'
     console.error('Error exporting dataset:', err)
   } finally {
     exportingId.value = null
   }
-}
-
-function _saveBlobLocally(arrayBuffer: ArrayBuffer, filename: string) {
-  const blob = new Blob([arrayBuffer], { type: 'application/zip' })
-  const blobUrl = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = blobUrl
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(blobUrl)
 }
 
 // Обработчик выбора файла для импорта
