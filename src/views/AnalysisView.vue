@@ -5,17 +5,13 @@ import { useRoute, useRouter } from 'vue-router'
 import Header from '@/components/Header.vue'
 import Button from '@/components/common/Button.vue'
 import ImageStrip from '@/components/common/ImageStrip.vue'
-// import KMeansAnalysis from '@/components/kmeans/KMeansAnalysis.vue'
 import ManualAnalysis from '@/components/manual/ManualAnalysis.vue'
-// import Combo from '@/components/combo/combo.vue'
 import { imagesAPI, type Image } from '@/api/images'
-// import ImageCropper from '@/components/manual/ImageCropper.vue'
 import { useOtherStore } from '@/stores/other'
 
 const route = useRoute()
 const router = useRouter()
 
-// Состояние компонента
 const images = ref<Image[]>([])
 const selectedImageId = ref<number | null>(null)
 const isLoading = ref(false)
@@ -25,41 +21,35 @@ const isImagePanelCollapsed = ref(false)
 const otherStore = useOtherStore()
 const isBackwardCompatibility = computed(() => otherStore.isBackwardCompatibility)
 
-// ID датасета и выбранных изображений из маршрута
 const datasetId = computed(() => parseInt(route.params.datasetId as string))
 const imageIds = computed(() => {
   const ids = route.query.imageIds as string
   return ids ? ids.split(',').map(id => parseInt(id)) : []
 })
 
-// Загрузка выбранных изображений
 const loadSelectedImages = async () => {
   try {
     isLoading.value = true
     error.value = null
-    
+
     if (imageIds.value.length === 0) {
       error.value = 'Не выбрано ни одного изображения для анализа'
       return
     }
-    
-    // Загружаем информацию о каждом изображении
-    const imagePromises = imageIds.value.map(id => 
+
+    const imagePromises = imageIds.value.map(id =>
       imagesAPI.getImageById(id).catch(err => {
         console.error(`Error loading image ${id}:`, err)
         return null
       })
     )
-    
+
     const loadedImages = await Promise.all(imagePromises)
     images.value = loadedImages.filter(img => img !== null) as Image[]
-    
-    // Выбираем первое изображение по умолчанию
+
     if (images.value.length > 0 && images.value[0]) {
       selectedImageId.value = images.value[0].id
     }
-    
-    console.log(`Loaded ${images.value.length} images for analysis`)
   } catch (err) {
     error.value = 'Ошибка при загрузке изображений'
     console.error('Error loading selected images:', err)
@@ -68,17 +58,13 @@ const loadSelectedImages = async () => {
   }
 }
 
-// Обработчики событий
 const handleImageSelect = (imageId: number) => {
   selectedImageId.value = imageId
-  console.log('Selected image for analysis:', imageId)
 }
 
 const handleImageDeleted = (imageId: number) => {
-  // Удаляем изображение из списка
   images.value = images.value.filter(img => img.id !== imageId)
-  
-  // Если удаленное изображение было выбрано, выбираем следующее
+
   if (selectedImageId.value === imageId) {
     selectedImageId.value = images.value.length > 0 && images.value[0] ? images.value[0].id : null
   }
@@ -92,12 +78,10 @@ const setActiveTab = (tab: 'kmeans' | 'manual' | 'crop' | 'combo') => {
   activeTab.value = tab
 }
 
-// Функция для сворачивания/разворачивания панели изображений
 const toggleImagePanel = () => {
   isImagePanelCollapsed.value = !isImagePanelCollapsed.value
 }
 
-// Загружаем данные при монтировании
 onMounted(() => {
   loadSelectedImages()
 })

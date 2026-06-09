@@ -11,7 +11,6 @@ import { imagesAPI } from '@/api/images'
 
 const router = useRouter()
 
-// Состояние компонента
 const datasets = ref<Dataset[]>([])
 const datasetPreviews = ref<Record<number, { images: string[]; total: number }>>({})
 const isLoading = ref(false)
@@ -20,10 +19,8 @@ const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const editingDataset = ref<Dataset | null>(null)
 const importLoading = ref(false)
-// ID датасета, который сейчас экспортируется (для индикации загрузки)
 const exportingId = ref<number | null>(null)
 
-// Загрузка датасетов
 const loadDatasets = async () => {
   try {
     isLoading.value = true
@@ -82,7 +79,6 @@ const loadDatasetPreviews = async (datasetsList: Dataset[]) => {
   datasetPreviews.value = nextPreviews
 }
 
-// Создание нового документа
 const handleCreateDataset = async (datasetData: { title: string; description: string }) => {
   try {
     const result = await datasetsAPI.createDataset(datasetData)
@@ -130,7 +126,6 @@ const handleEditDataset = async (datasetData: { title: string; description: stri
   }
 }
 
-// Удаление документа
 const handleDeleteDataset = async (id: number) => {
   if (!confirm('Вы уверены, что хотите удалить этот документ? Это действие нельзя отменить.')) {
     return
@@ -150,67 +145,19 @@ const handleDeleteDataset = async (id: number) => {
   }
 }
 
-// Экспорт документа
 const handleExportDataset = async (id: number) => {
-  if (exportingId.value) return // Блокируем повторный клик
-  
+  if (exportingId.value) return
+
   try {
     exportingId.value = id
-    // Получаем готовую ссылку для скачивания от бэкенда
     const downloadUrl = await datasetsAPI.exportDataset(id)
-    
-    // Проверяем, запущено ли приложение внутри Tauri
-    const isTauri = false
-    
-    if (isTauri) {
-      // ==========================================
-      // ЛОГИКА ДЛЯ ДЕСКТОПА (TAURI)
-      // ==========================================
-      try {
-        // Динамически импортируем плагины (чтобы не ломать сборку для обычного Web)
-        // Внимание: ниже импорты для Tauri v2. 
-        // Если у вас Tauri v1, используйте '@tauri-apps/api/dialog' и '@tauri-apps/api/fs'
-        const { save } = await import('@tauri-apps/plugin-dialog')
-        const { writeFile } = await import('@tauri-apps/plugin-fs')
-        
-        // 1. Открываем системное диалоговое окно сохранения
-        const filePath = await save({
-          defaultPath: `dataset_${id}.zip`,
-          filters:[{ name: 'Архив документа', extensions: ['zip'] }]
-        })
-        
-        if (filePath) {
-          // 2. Скачиваем файл (данные) через fetch 
-          const response = await fetch(downloadUrl)
-          if (!response.ok) throw new Error('Ошибка при скачивании файла')
-          
-          const arrayBuffer = await response.arrayBuffer()
-          
-          // 3. Сохраняем файл на диск 
-          // (Для Tauri v1 метод называется writeBinaryFile)
-          await writeFile(filePath, new Uint8Array(arrayBuffer))
-        }
-      } catch (tauriErr) {
-        console.warn('Tauri FS API error, фолбэк на системный браузер:', tauriErr)
-        
-        // Фолбэк на случай огромных файлов (>2GB) или ошибок прав:
-        // Откроет ссылку в браузере по умолчанию (Chrome/Edge/Safari), который сам скачает файл
-        const { open } = await import('@tauri-apps/plugin-shell')
-        await open(downloadUrl)
-      }
-    } else {
-      // ==========================================
-      // ЛОГИКА ДЛЯ ОБЫЧНОГО ВЕБ-БРАУЗЕРА
-      // ==========================================
-      const a = document.createElement('a')
-      a.href = downloadUrl
-      a.download = `dataset_${id}.zip` // Подсказка браузеру, что файл нужно скачать
-      a.target = '_blank'
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-    }
-    
+    const a = document.createElement('a')
+    a.href = downloadUrl
+    a.download = `dataset_${id}.zip`
+    a.target = '_blank'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
   } catch (err: any) {
     error.value = err.message || 'Ошибка при экспорте документа'
     console.error('Error exporting dataset:', err)
@@ -219,7 +166,6 @@ const handleExportDataset = async (id: number) => {
   }
 }
 
-// Обработчик выбора файла для импорта
 const onFileSelected = async (event: Event) => {
   const input = event.target as HTMLInputElement
   if (!input.files?.length) {
@@ -245,12 +191,10 @@ const onFileSelected = async (event: Event) => {
     console.error('Error importing dataset:', err)
   } finally {
     importLoading.value = false
-    // Reset file input
     input.value = ''
   }
 }
 
-// Триггер для инпута файла
 const triggerFileInput = () => {
   const fileInput = document.getElementById('import-dataset-input')
   fileInput?.click()
@@ -268,7 +212,6 @@ const closeCreateModal = () => {
   showCreateModal.value = false
 }
 
-// Загрузка данных при монтировании компонента
 onMounted(() => {
   loadDatasets()
 })
