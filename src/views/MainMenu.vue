@@ -158,8 +158,13 @@ const handleExportDataset = async (id: number) => {
 
   try {
     const downloadUrl = await datasetsAPI.exportDataset(id)
-    const { open } = await import('@tauri-apps/plugin-shell')
-    await open(downloadUrl)
+    const a = document.createElement('a')
+    a.href = downloadUrl
+    a.download = `dataset_${id}.zip`
+    a.target = '_blank'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
   } catch (err: any) {
     error.value = err.message || 'Ошибка при экспорте документа'
     console.error('Error exporting dataset:', err)
