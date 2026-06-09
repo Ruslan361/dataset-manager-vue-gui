@@ -5,13 +5,22 @@
   "windows": [
     "main"
   ],
-  "permissions":[
+  "permissions": [
     "core:default",
-  
+
     "dialog:allow-save",
-    
+
     "fs:allow-write",
-    
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        { "path": "$HOME/**" },
+        { "path": "$DESKTOP/**" },
+        { "path": "$DOCUMENT/**" },
+        { "path": "$DOWNLOAD/**" }
+      ]
+    },
+
     "shell:allow-open"
   ]
 }
