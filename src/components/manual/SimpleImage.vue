@@ -1,8 +1,14 @@
 <template>
   <div class="simple-image-container">
-    
-    
-    
+    <!-- Заголовок -->
+    <!--
+    <div class="image-header">
+      <slot name="header">
+        <p>{{ title }}</p>
+      </slot>
+    </div>
+    -->
+    <!-- Контент (картинка) -->
     <div class="image-wrapper">
       <img 
         :src="imageUrl" 
@@ -61,8 +67,8 @@ const onImageError = (event: Event) => {
 <style scoped>
 .simple-image-container {
   display: flex;
-  flex-direction: column;
-  height: 100%;
+  flex-direction: column; /* заголовок сверху, картинка снизу */
+  height: 100%;           /* чтобы занять весь draggable-окно */
   width: 100%;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
@@ -75,7 +81,7 @@ const onImageError = (event: Event) => {
   padding: var(--spacing-sm);
   background-color: var(--bg-color);
   border-bottom: 1px solid var(--border-color);
-  flex-shrink: 0;
+  flex-shrink: 0; /* не даёт заголовку сжиматься */
 }
 
 .image-header p {
@@ -86,11 +92,11 @@ const onImageError = (event: Event) => {
 
 .image-wrapper {
   position: relative;
-  flex: 1;
+  flex: 1; /* занимает всё оставшееся место */
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 0;
+  min-height: 0; /* важно для flex */
 }
 
 .image-wrapper img {

@@ -1,6 +1,7 @@
 import { imagesAPI } from './images'
 import { manualAnalysisAPI, type ManualLine } from './manual'
 
+// --- Интерфейсы для входящего JSON ---
 interface MarkupMetadata {
   luminance: number[][]
   verticalLines: number[]
@@ -67,21 +68,26 @@ class MarkupImporter {
     const { metadata, originalImage, blurredImage } = markupData
     const filename = metadata.name || `imported_${Date.now()}.png`
 
+    // 1. Конвертируем base64 в File
     const imageFile = this.base64ToFile(originalImage, filename)
 
+    // 2. Загружаем изображение в датасет, чтобы получить imageId
     const uploadResponse = await imagesAPI.uploadImage(datasetId, imageFile, filename.replace(/\.[^/.]+$/, ''))
     if (!uploadResponse.success || !uploadResponse.image_id) {
       throw new Error(`Не удалось создать изображение в датасете: ${uploadResponse.message}`)
     }
     const imageId = uploadResponse.image_id
 
+    // 3. Инициализируем состояние в manualAnalysisAPI
     const state = manualAnalysisAPI.getAnalysisState(imageId)
     state.originalImageBase64 = originalImage
     state.blurredImageBase64 = blurredImage
     
+    // Получаем и сохраняем размеры изображения
     const dimensions = await this.getImageDimensionsFromBase64(originalImage)
     state.imageDimensions = dimensions
 
+    // Конвертируем пиксельные линии из JSON в относительные и сохраняем в состояние
     const relativeLines = this.convertPixelLinesToRelative(
       metadata.verticalLines,
       metadata.horizontalLines,
@@ -89,8 +95,10 @@ class MarkupImporter {
     )
     state.currentLines = relativeLines
 
+    // 4. Вызываем calculateMeanLines. Теперь он возьмет линии из состояния.
     await manualAnalysisAPI.calculateMeanLines(imageId)
 
+    // 5. Сохраняем результат категоризации. Этот метод также использует линии из состояния.
     await manualAnalysisAPI.calculateCategorizedMean(
       imageId,
       metadata.selectedCells,
@@ -103,6 +111,8 @@ class MarkupImporter {
       message: 'Разметка успешно импортирована.',
     }
   }
+
+  // --- Вспомогательные методы ---
 
   private convertPixelLinesToRelative(
     verticalPixels: number[],

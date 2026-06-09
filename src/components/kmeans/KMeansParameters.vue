@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue'
 import Button from '@/components/common/Button.vue'
+// Импортируем ChromePicker и стили из vue-color
 import { ChromePicker } from 'vue-color'
 import 'vue-color/style.css'
 
@@ -32,6 +33,7 @@ interface Emits {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
+// Локальные значения для v-model
 const localClusters = ref(props.clusters)
 const localMaxIterations = ref(props.maxIterations)
 const localAttempts = ref(props.attempts)
@@ -40,10 +42,13 @@ const localFlags = ref(props.flags)
 const localEpsilon = ref(props.epsilon)
 const localColors = ref([...props.colors])
 
+// Состояние для управления открытым пикером (хранит индекс открытого цвета)
 const activePicker = ref<number | null>(null)
 
+// Флаг для предотвращения рекурсии
 const isUpdatingFromProps = ref(false)
 
+// Синхронизация с родительским компонентом
 watch(() => props.clusters, (newVal) => {
   if (!isUpdatingFromProps.value && newVal !== localClusters.value) {
     isUpdatingFromProps.value = true
@@ -81,6 +86,7 @@ watch(() => props.colors, (newVal) => {
   }
 }, { deep: true })
 
+// Обновление родительского компонента
 watch(localClusters, (newVal, oldVal) => {
   if (!isUpdatingFromProps.value && newVal !== oldVal) {
     emit('update:clusters', newVal)
@@ -150,11 +156,13 @@ const toggleExpanded = () => {
   emit('update:isExpanded', !props.isExpanded)
 }
 
+// Открытие/закрытие пикера
 const togglePicker = (index: number) => {
   if (props.isProcessing) return
   activePicker.value = activePicker.value === index ? null : index
 }
 
+// Обновление цвета из vue-color
 const onColorChange = (index: number, newColor: any) => {
   let rgb: { r: number; g: number; b: number } | null = null
 
@@ -196,8 +204,8 @@ const randomizeColors = () => {
   
   for (let i = 0; i < localClusters.value; i++) {
     const hue = Math.random() * 360
-    const saturation = 50 + Math.random() * 40
-    const lightness = 40 + Math.random() * 30
+    const saturation = 50 + Math.random() * 40 // 50-90%
+    const lightness = 40 + Math.random() * 30  // 40-70%
     
     const rgb = hslToRgb(hue, saturation, lightness)
     newColors.push([rgb.r, rgb.g, rgb.b])
@@ -206,6 +214,7 @@ const randomizeColors = () => {
   localColors.value = newColors
 }
 
+// Утилитарные функции
 function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
   s /= 100
   l /= 100
@@ -262,7 +271,7 @@ function rgbToHex(r: number, g: number, b: number): string {
     
     <div v-show="isExpanded" class="parameters-content">
       <div class="parameters-scroll">
-        
+        <!-- Основные параметры -->
         <div class="params-section">
           <h6 class="section-subtitle">Основные параметры</h6>
           
@@ -328,7 +337,7 @@ function rgbToHex(r: number, g: number, b: number): string {
           </div>
         </div>
 
-        
+        <!-- Алгоритмические параметры -->
         <div class="params-section">
           <h6 class="section-subtitle">Алгоритм</h6>
           
@@ -373,7 +382,7 @@ function rgbToHex(r: number, g: number, b: number): string {
           </div>
         </div>
 
-        
+        <!-- Цвета кластеров -->
         <div class="params-section">
           <div class="colors-header">
             <h6 class="section-subtitle">Цвета кластеров ({{ localClusters }})</h6>
@@ -403,11 +412,11 @@ function rgbToHex(r: number, g: number, b: number): string {
               :key="`cluster-${index}`"
               class="color-item"
             >
-              
+              <!-- Шапка цвета -->
               <div class="color-item-header">
                 <label class="color-label">Кластер {{ index + 1 }}</label>
                 <div class="color-controls">
-                  
+                  <!-- Кнопка-превью цвета вместо input type="color" -->
                   <div
                     class="color-preview"
                     :class="{ 'is-disabled': isProcessing, 'is-active': activePicker === index }"
@@ -421,7 +430,7 @@ function rgbToHex(r: number, g: number, b: number): string {
                 </div>
               </div>
 
-              
+              <!-- Контейнер для vue-color ChromePicker -->
               <div v-if="activePicker === index" class="color-picker-container">
                 <ChromePicker
                   :model-value="rgbToHex(color[0], color[1], color[2])"
@@ -432,7 +441,7 @@ function rgbToHex(r: number, g: number, b: number): string {
           </div>
         </div>
 
-        
+        <!-- Кнопки управления -->
         <div class="params-section">
           <div class="analysis-controls">
             <Button
@@ -516,6 +525,8 @@ function rgbToHex(r: number, g: number, b: number): string {
   flex-direction: column;
   gap: var(--spacing-lg);
 }
+
+/* Кастомный скроллбар */
 .parameters-scroll::-webkit-scrollbar {
   width: 6px;
 }
@@ -534,6 +545,8 @@ function rgbToHex(r: number, g: number, b: number): string {
 .parameters-scroll::-webkit-scrollbar-thumb:hover {
   background: var(--text-color-secondary);
 }
+
+/* Firefox */
 .parameters-scroll {
   scrollbar-width: thin;
   scrollbar-color: var(--border-color-hover) var(--bg-color-secondary);
@@ -594,6 +607,8 @@ function rgbToHex(r: number, g: number, b: number): string {
   cursor: not-allowed;
   background-color: var(--bg-color-accent);
 }
+
+/* Информационное сообщение */
 .param-info {
   margin-top: var(--spacing-xs);
 }
@@ -618,6 +633,8 @@ function rgbToHex(r: number, g: number, b: number): string {
   color: var(--text-color-secondary);
   line-height: 1.4;
 }
+
+/* Секция Цвета */
 .colors-header {
   display: flex;
   justify-content: space-between;
@@ -684,6 +701,8 @@ function rgbToHex(r: number, g: number, b: number): string {
   align-items: center;
   gap: var(--spacing-sm);
 }
+
+/* Новые стили для превью цвета (взамен старого input) */
 .color-preview {
   width: 40px;
   height: 30px;
@@ -706,6 +725,8 @@ function rgbToHex(r: number, g: number, b: number): string {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Контейнер для vue-color пикера */
 .color-picker-container {
   margin-top: var(--spacing-sm);
   padding-top: var(--spacing-sm);
@@ -728,6 +749,8 @@ function rgbToHex(r: number, g: number, b: number): string {
   padding: var(--spacing-xs);
   border-radius: var(--border-radius-small);
 }
+
+/* Кнопки управления */
 .analysis-controls {
   display: flex;
   flex-direction: column;
@@ -754,6 +777,8 @@ function rgbToHex(r: number, g: number, b: number): string {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* Адаптивность */
 @media (max-width: 768px) {
   .parameters-scroll {
     max-height: 400px;

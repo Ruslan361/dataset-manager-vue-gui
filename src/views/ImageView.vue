@@ -15,6 +15,7 @@ const otherStore = useOtherStore()
 const route = useRoute()
 const router = useRouter()
 
+// Состояние компонента
 const images = ref<Image[]>([])
 const selectedImages = ref<Set<number>>(new Set())
 const isLoading = ref(false)
@@ -25,8 +26,10 @@ const itemsPerPage = computed<number>(() => Number(otherStore.imagesInOnePage) |
 const showUploadModal = ref(false)
 const isBackwardCompatibility = computed(() => otherStore.isBackwardCompatibility)
 
+// Ссылки на компоненты
 const uploadModalRef = ref<InstanceType<typeof ImageUploadModal>>()
 
+// ID датасета из маршрута
 const datasetId = computed(() => parseInt(route.params.id as string))
 
 const handleAnalysis = () => {
@@ -42,6 +45,8 @@ const handleAnalysis = () => {
   })
 }
 
+
+// Улучшенная функция загрузки с лучшей обработкой ошибок
 const loadImages = async (page: number = 1) => {
   try {
     isLoading.value = true
@@ -65,6 +70,7 @@ const loadImages = async (page: number = 1) => {
     
     console.log(`Loaded ${response.images.length} images, total: ${totalImages.value}`)
     
+    // Если текущая страница пуста и это не первая страница, переходим на предыдущую
     if (response.images.length === 0 && page > 1) {
       console.log('Current page is empty, going to previous page')
       await loadImages(page - 1)
@@ -79,8 +85,10 @@ const loadImages = async (page: number = 1) => {
   }
 }
 
+// Обработчики событий
 const handleImageClick = (imageId: number) => {
   console.log('Открыть изображение:', imageId)
+  // Здесь будет логика открытия изображения в модальном окне
 }
 
 const handleImageSelect = (imageId: number, selected: boolean) => {
@@ -92,6 +100,7 @@ const handleImageSelect = (imageId: number, selected: boolean) => {
     selectedImages.value.delete(imageId)
   }
   
+  // Если используете reactive Set, может потребоваться принудительное обновление
   selectedImages.value = new Set(selectedImages.value)
 }
 
@@ -103,8 +112,10 @@ const handleImageDelete = async (imageId: number) => {
   try {
     const result = await imagesAPI.removeImage(imageId)
     if (result.success) {
+      // Удаляем из выбранных
       selectedImages.value.delete(imageId)
       
+      // Перезагружаем текущую страницу
       await loadImages(currentPage.value)
       
       console.log(`Image ${imageId} deleted and page reloaded`)
@@ -137,6 +148,7 @@ const handleDeleteSelected = async () => {
   try {
     console.log(`Starting deletion of ${selectedCount} images...`)
     
+    // Показываем индикатор загрузки
     isLoading.value = true
     
     const deletePromises = Array.from(selectedImages.value).map(id => 
@@ -149,15 +161,19 @@ const handleDeleteSelected = async () => {
     
     console.log(`Deletion completed: ${successCount} success, ${failCount} failed`)
     
+    // Очищаем выбранные изображения
     selectedImages.value.clear()
     
+    // Всегда перезагружаем страницу после попытки удаления
     await loadImages(currentPage.value)
     
+    // Показываем результат
     if (failCount === 0) {
       console.log(`All ${successCount} images deleted successfully`)
     } else {
       error.value = `Удалено ${successCount} из ${results.length} изображений. ${failCount} не удалось удалить.`
       
+      // Показываем детали ошибок в консоли
       const failedResults = results.filter(r => !r.success)
       console.error('Failed deletions:', failedResults)
     }
@@ -165,6 +181,7 @@ const handleDeleteSelected = async () => {
     error.value = 'Ошибка при массовом удалении изображений'
     console.error('Error deleting selected images:', err)
     
+    // Все равно перезагружаем страницу на случай частичного успеха
     await loadImages(currentPage.value)
     selectedImages.value.clear()
   } finally {
@@ -178,6 +195,7 @@ const handleManualMarkup = () => {
     return
   }
   console.log('Ручная разметка для:', Array.from(selectedImages.value))
+  // Здесь будет переход к ручной разметке
 }
 
 const handleKMeansMarkup = () => {
@@ -186,6 +204,7 @@ const handleKMeansMarkup = () => {
     return
   }
   console.log('K-Means разметка для:', Array.from(selectedImages.value))
+  // Здесь будет логика K-Means разметки
 }
 
 const handlePageChange = (page: number) => {
@@ -197,6 +216,8 @@ const goBack = () => {
   router.push('/')
 }
 
+
+// Обработчики загрузки изображений
 const openUploadModal = () => {
   showUploadModal.value = true
 }
@@ -205,12 +226,15 @@ const closeUploadModal = () => {
   showUploadModal.value = false
 }
 
+// Исправленный обработчик загрузки - использует имена файлов как titles
 const handleImageUpload = async (files: FileList) => {
   try {
     console.log(`Starting upload of ${files.length} files to dataset ${datasetId.value}`)
     
+    // Показываем индикатор загрузки в модальном окне
     uploadModalRef.value?.setLoading(true)
     
+    // Загружаем файлы батчами по 5, чтобы не перегружать SQLite параллельными write-транзакциями
     const BATCH_SIZE = 5
     const fileArray = Array.from(files)
     const settled: PromiseSettledResult<ResultResponse>[] = []
@@ -239,6 +263,7 @@ const handleImageUpload = async (files: FileList) => {
     const failCount = results.length - successCount
     
     if (successCount > 0) {
+      // Перезагружаем список изображений
       console.log(`Successfully uploaded ${successCount} images, reloading list...`)
       await loadImages(1)
       currentPage.value = 1
@@ -246,9 +271,11 @@ const handleImageUpload = async (files: FileList) => {
     }
     
     if (failCount === 0) {
+      // Все файлы загружены успешно
       console.log('All files uploaded successfully')
       closeUploadModal()
     } else {
+      // Есть ошибки при загрузке
       const failedResults = results.filter(r => !r.success)
       const errorMessage = `Загружено ${successCount} из ${results.length} файлов.\n\nОшибки:\n${failedResults.map(r => `• ${r.message}`).join('\n')}`
       console.error('Some uploads failed:', failedResults)
@@ -263,17 +290,20 @@ const handleImageUpload = async (files: FileList) => {
   }
 }
 
+// Дополнительная функция для принудительного обновления
 const forceRefresh = async () => {
   console.log('Force refreshing images...')
   selectedImages.value.clear()
   await loadImages(currentPage.value)
 }
 
+// НОВЫЙ обработчик для события от импортера
 const handleImportCompleted = () => {
   console.log('Import completed, refreshing image list...')
   forceRefresh()
 }
 
+// Загружаем данные при монтировании
 onMounted(() => {
   loadImages()
 })
@@ -322,7 +352,7 @@ onMounted(() => {
           </div>
         </div>
 
-        
+        <!-- Панель управления -->
         <div class="control-panel">
           <div class="control-panel__selection">
             <Button 
@@ -359,7 +389,7 @@ onMounted(() => {
           </div>
         </div>
 
-        
+        <!-- Сообщение об ошибке -->
         <div v-if="error" class="error-message">
           {{ error }}
           <Button 
@@ -371,13 +401,13 @@ onMounted(() => {
           </Button>
         </div>
 
-        
+        <!-- Индикатор загрузки -->
         <div v-if="isLoading" class="loading">
           <div class="loading-spinner"></div>
           <span>{{ selectedImages.size > 0 ? 'Удаление изображений...' : 'Загрузка изображений...' }}</span>
         </div>
 
-        
+        <!-- Сетка изображений -->
         <div v-else-if="images.length > 0" class="images-grid">
           <ImageCard
             v-for="image in images"
@@ -392,7 +422,7 @@ onMounted(() => {
           />
         </div>
 
-        
+        <!-- Пустое состояние -->
         <div v-else-if="!isLoading" class="empty-state">
           <div class="empty-state__icon">📷</div>
           <h3>В датасете нет изображений</h3>
@@ -406,7 +436,7 @@ onMounted(() => {
           </Button>
         </div>
 
-        
+        <!-- Пагинация -->
         <Pagination
           v-if="totalImages > itemsPerPage"
           :current-page="currentPage"
@@ -417,7 +447,7 @@ onMounted(() => {
       </div>
     </main>
 
-    
+    <!-- Модальное окно загрузки -->
     <ImageUploadModal
       ref="uploadModalRef"
       :is-visible="showUploadModal"
@@ -428,6 +458,7 @@ onMounted(() => {
   </div>
 </template>
 
+<!-- Стили остаются без изменений -->
 <style scoped>
 .main-layout {
   min-height: 100vh;
@@ -461,7 +492,7 @@ onMounted(() => {
 
 .header-actions {
   display: flex;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-sm); /* Уменьшим отступ для большего кол-ва кнопок */
   align-items: center;
 }
 

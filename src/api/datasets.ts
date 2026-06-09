@@ -123,7 +123,8 @@ class DatasetsAPI {
    * 2. Ожидание
    * 3. Возврат ссылки на скачивание (без fetch!)
    */
-  async exportDataset(datasetId: number): Promise<string> {
+  async exportDataset(datasetId: number): Promise<string> { // <--- Возвращаем string (URL)
+    // 1. Запуск задачи
     const startResponse = await fetch(`${API_BASE_URL}/archive/export/${datasetId}`, {
       method: 'POST',
     })
@@ -136,6 +137,7 @@ class DatasetsAPI {
     const startData: TaskStartResponse = await startResponse.json()
     const taskId = startData.task_id
 
+    // 2. Опрос статуса (Polling)
     await pollUntilDone<TaskStatusResponse>(
       `${API_BASE_URL}/archive/status/${taskId}`,
       'completed',
@@ -149,6 +151,7 @@ class DatasetsAPI {
     const formData = new FormData()
     formData.append('file', file)
 
+    // Исправлен путь на /archive/import
     const response = await fetch(`${API_BASE_URL}/archive/import`, {
       method: 'POST',
       body: formData,

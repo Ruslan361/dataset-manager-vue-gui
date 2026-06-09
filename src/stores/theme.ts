@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 
+// Hex-приближения HSL-значений из base.css — используются как defaults в UI
 export const THEME_DEFAULTS = {
   '--primary-color':       '#2a6df4',
   '--secondary-color':     '#10b77f',
@@ -23,6 +24,7 @@ export type ThemeKey = keyof typeof THEME_DEFAULTS
 export const useThemeStore = defineStore('theme', () => {
   const overrides = ref<Partial<Record<ThemeKey, string>>>({})
 
+  /** Применяет все сохранённые overrides к :root. Вызывать после монтирования приложения. */
   function apply() {
     if (typeof document === 'undefined') return
     const root = document.documentElement
@@ -36,6 +38,7 @@ export const useThemeStore = defineStore('theme', () => {
     }
   }
 
+  /** Задаёт одну переменную и сразу применяет её. */
   function setVar(key: ThemeKey, value: string) {
     overrides.value = { ...overrides.value, [key]: value }
     if (typeof document !== 'undefined') {
@@ -43,11 +46,13 @@ export const useThemeStore = defineStore('theme', () => {
     }
   }
 
+  /** Сбрасывает все кастомизации к значениям base.css. */
   function reset() {
     overrides.value = {}
     apply()
   }
 
+  /** Возвращает текущее эффективное значение переменной (override или default). */
   function getVar(key: ThemeKey): string {
     return overrides.value[key] ?? THEME_DEFAULTS[key]
   }

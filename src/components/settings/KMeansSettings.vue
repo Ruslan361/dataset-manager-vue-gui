@@ -218,7 +218,7 @@ export default {
             </select>
           </div>
 
-        
+        <!-- Цвета кластеров -->
         <div class="params-section">
           <div class="colors-header">
             <h6 class="section-subtitle">Цвета кластеров ({{ localClusters }})</h6>
@@ -333,6 +333,8 @@ export default {
   flex-direction: column;
   gap: var(--spacing-lg);
 }
+
+/* Кастомный скроллбар */
 .parameters-scroll::-webkit-scrollbar {
   width: 6px;
 }
@@ -351,6 +353,8 @@ export default {
 .parameters-scroll::-webkit-scrollbar-thumb:hover {
   background: var(--text-color-secondary);
 }
+
+/* Firefox */
 .parameters-scroll {
   scrollbar-width: thin;
   scrollbar-color: var(--border-color-hover) var(--bg-color-secondary);
@@ -411,6 +415,8 @@ export default {
   cursor: not-allowed;
   background-color: var(--bg-color-accent);
 }
+
+/* Информационное сообщение */
 .param-info {
   margin-top: var(--spacing-xs);
 }
@@ -435,6 +441,8 @@ export default {
   color: var(--text-color-secondary);
   line-height: 1.4;
 }
+
+/* Секция Цвета */
 .colors-header {
   display: flex;
   justify-content: space-between;
@@ -532,6 +540,8 @@ export default {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 1px var(--primary-color);
 }
+
+/* Новые стили для превью цвета (взамен старого input) */
 .color-preview {
   width: 40px;
   height: 30px;
@@ -552,6 +562,8 @@ export default {
   padding: var(--spacing-xs);
   border-radius: var(--border-radius-small);
 }
+
+/* Кнопки управления */
 .analysis-controls {
   display: flex;
   flex-direction: column;
@@ -578,6 +590,8 @@ export default {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* Адаптивность */
 @media (max-width: 768px) {
   .parameters-scroll {
     max-height: 400px;

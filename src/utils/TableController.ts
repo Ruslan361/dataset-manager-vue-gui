@@ -39,6 +39,7 @@ export class TableController {
     this.tableElement = tableElement
   }
 
+  // ОСНОВНЫЕ МЕТОДЫ УПРАВЛЕНИЯ
   
   /**
    * Полная перестройка таблицы с новыми данными
@@ -46,8 +47,10 @@ export class TableController {
   rebuildTable(newData: Partial<TableData>): void {
     console.log('Rebuilding table with new data:', newData)
     
+    // Обновляем данные
     this.data = { ...this.data, ...newData }
     
+    // Полностью перестраиваем DOM таблицы
     this.buildTableStructure()
     this.populateTableData()
     this.updateHeaders()
@@ -71,6 +74,7 @@ export class TableController {
     this.data.rows = rows
     this.data.cols = cols
     
+    // Перестраиваем структуру
     this.buildTableStructure()
     this.generateEmptyData()
     this.populateTableData()
@@ -88,7 +92,7 @@ export class TableController {
       return
     }
     
-    this.data.data = newData.map(row => [...row])
+    this.data.data = newData.map(row => [...row]) // Глубокое копирование
     this.populateTableData()
   }
 
@@ -174,18 +178,24 @@ export class TableController {
     })
   }
 
+  // ПРИВАТНЫЕ МЕТОДЫ ПОСТРОЕНИЯ
+
   private buildTableStructure(): void {
     if (!this.tableElement) return
     
+    // Очищаем таблицу
     this.tableElement.innerHTML = ''
     
+    // Создаем thead
     const thead = document.createElement('thead')
     const headerRow = document.createElement('tr')
     
+    // Пустая ячейка в углу
     const cornerCell = document.createElement('th')
     cornerCell.className = 'sticky-column sticky-header'
     headerRow.appendChild(cornerCell)
     
+    // Заголовки колонок
     for (let col = 0; col < this.data.cols; col++) {
       const th = document.createElement('th')
       th.className = 'sticky-header'
@@ -193,6 +203,7 @@ export class TableController {
       headerRow.appendChild(th)
     }
     
+    // Заголовки категорий
     this.categories.forEach(category => {
       const th = document.createElement('th')
       th.className = 'sticky-header average-header'
@@ -204,16 +215,20 @@ export class TableController {
     thead.appendChild(headerRow)
     this.tableElement.appendChild(thead)
     
+    // Создаем tbody
     const tbody = document.createElement('tbody')
     
+    // Обычные строки данных
     for (let row = 0; row < this.data.rows; row++) {
       const tr = document.createElement('tr')
       
+      // Заголовок строки
       const rowHeader = document.createElement('td')
       rowHeader.className = 'sticky-column row-header'
       rowHeader.dataset.row = row.toString()
       tr.appendChild(rowHeader)
       
+      // Ячейки данных
       for (let col = 0; col < this.data.cols; col++) {
         const td = document.createElement('td')
         td.className = 'data-cell'
@@ -222,6 +237,7 @@ export class TableController {
         tr.appendChild(td)
       }
       
+      // Средние по категориям для строки
       this.categories.forEach(category => {
         const td = document.createElement('td')
         td.className = 'average-cell'
@@ -234,15 +250,18 @@ export class TableController {
       tbody.appendChild(tr)
     }
     
+    // Строка средних по категориям (добавляется динамически)
     const avgRow = document.createElement('tr')
     avgRow.className = 'category-averages-row hidden'
     avgRow.dataset.avgRow = 'true'
     
+    // Заголовок строки средних
     const avgHeader = document.createElement('td')
     avgHeader.className = 'sticky-column averages-header'
     avgHeader.textContent = 'Средние по категориям'
     avgRow.appendChild(avgHeader)
     
+    // Простые средние по колонкам
     for (let col = 0; col < this.data.cols; col++) {
       const td = document.createElement('td')
       td.className = 'simple-average-cell'
@@ -250,6 +269,7 @@ export class TableController {
       avgRow.appendChild(td)
     }
     
+    // Общие средние по категориям
     this.categories.forEach(category => {
       const td = document.createElement('td')
       td.className = 'total-category-average'
@@ -271,6 +291,7 @@ export class TableController {
   private populateTableData(): void {
     if (!this.tableElement) return
     
+    // Заполняем ячейки данными
     this.data.data.forEach((row, rowIndex) => {
       row.forEach((value, colIndex) => {
         const cell = this.tableElement!.querySelector(
@@ -283,14 +304,17 @@ export class TableController {
       })
     })
     
+    // Обновляем средние по строкам для категорий
     this.updateRowAverages()
     
+    // Обновляем строку общих средних
     this.updateAverageRow()
   }
 
   private renderHeaders(): void {
     if (!this.tableElement) return
     
+    // Обновляем заголовки колонок
     this.data.colHeaders.forEach((header, index) => {
       const th = this.tableElement!.querySelector(`th[data-col="${index}"]`)
       if (th) {
@@ -298,6 +322,7 @@ export class TableController {
       }
     })
     
+    // Обновляем заголовки строк
     this.data.rowHeaders.forEach((header, index) => {
       const td = this.tableElement!.querySelector(`td[data-row="${index}"].row-header`)
       if (td) {
@@ -314,11 +339,13 @@ export class TableController {
   private applyCellSelections(): void {
     if (!this.tableElement) return
     
+    // Сбрасываем все стили
     this.tableElement.querySelectorAll('.data-cell').forEach(cell => {
       const td = cell as HTMLTableCellElement
       td.style.backgroundColor = 'transparent'
     })
     
+    // Применяем выделения
     for (const cellKey in this.data.cellSelections) {
       const categoryId = this.data.cellSelections[cellKey]
       const category = this.categories.find(cat => cat.id === categoryId)
@@ -335,12 +362,14 @@ export class TableController {
       }
     }
     
+    // Обновляем видимость строки средних
     const hasSelections = Object.keys(this.data.cellSelections).length > 0
     const avgRow = this.tableElement.querySelector('[data-avg-row="true"]') as HTMLTableRowElement
     if (avgRow) {
       avgRow.classList.toggle('hidden', !hasSelections)
     }
     
+    // Обновляем средние
     this.updateRowAverages()
     this.updateAverageRow()
   }
@@ -365,6 +394,7 @@ export class TableController {
   private updateAverageRow(): void {
     if (!this.tableElement) return
     
+    // Обновляем простые средние по колонкам
     for (let col = 0; col < this.data.cols; col++) {
       const average = this.getColumnAverage(col)
       const cell = this.tableElement.querySelector(
@@ -376,6 +406,7 @@ export class TableController {
       }
     }
     
+    // Обновляем общие средние по категориям
     this.categories.forEach(category => {
       const average = this.getTotalCategoryAverage(category.id)
       const cell = this.tableElement!.querySelector(
@@ -391,9 +422,11 @@ export class TableController {
   private bindEvents(): void {
     if (!this.tableElement) return
     
+    // Удаляем старые обработчики
     this.tableElement.removeEventListener('click', this.handleCellClick)
     this.tableElement.removeEventListener('contextmenu', this.handleCellContextMenu)
     
+    // Добавляем новые
     this.tableElement.addEventListener('click', this.handleCellClick.bind(this))
     this.tableElement.addEventListener('contextmenu', this.handleCellContextMenu.bind(this))
   }
@@ -425,7 +458,7 @@ export class TableController {
 
   private toggleCellSelection(row: number, col: number): void {
     const cellKey = `${row}-${col}`
-    const primaryCategory = this.categories[0]
+    const primaryCategory = this.categories[0] // Эпидермис по умолчанию
     
     if (this.data.cellSelections[cellKey] === primaryCategory?.id) {
       delete this.data.cellSelections[cellKey]
@@ -438,6 +471,7 @@ export class TableController {
   }
 
   private showCellMenu(event: MouseEvent, row: number, col: number): void {
+    // Здесь можно добавить логику контекстного меню
     console.log(`Context menu for cell [${row}][${col}]`)
   }
 
@@ -446,6 +480,8 @@ export class TableController {
       this.onSelectionChange({ ...this.data.cellSelections })
     }
   }
+
+  // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
 
   private validateDataDimensions(data: number[][]): boolean {
     return data.length === this.data.rows && 
@@ -517,6 +553,8 @@ export class TableController {
     
     return `rgb(${newR}, ${newG}, ${newB})`
   }
+
+  // ПУБЛИЧНЫЕ СЕТТЕРЫ
 
   setSelectionChangeHandler(handler: (selections: Record<string, string>) => void): void {
     this.onSelectionChange = handler

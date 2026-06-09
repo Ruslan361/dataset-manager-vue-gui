@@ -3,6 +3,7 @@ import { useOtherStore } from '@/stores/other'
 import { imagesAPI } from '@/api/images'
 import Button from '@/components/common/Button.vue'
 const otherStore = useOtherStore()
+// Метод для принудительной очистки кэша
 const clearCache = () => {
   imagesAPI.clearAllCache()
   console.log('Cache cleared')

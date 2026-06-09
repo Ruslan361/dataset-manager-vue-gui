@@ -6,14 +6,14 @@
       </slot>
     </div>
     
-    
+    <!-- ИЗМЕНЕНО: Добавлены обработчики для зума и панорамирования -->
     <div 
       class="interactive-wrapper" 
       ref="interactiveImageContainer"
       @contextmenu.prevent="handleContextMenu"
       @wheel.prevent="handleWheelZoom"
     >
-      
+      <!-- ИЗМЕНЕНО: Применены стили для трансформации -->
       <div 
         class="image-and-lines-container" 
         ref="imageContainer"
@@ -29,9 +29,9 @@
           class="responsive-image"
         />
         
-        
+        <!-- ИСПРАВЛЕНО: Контейнер для линий, привязанный к изображению -->
         <div class="lines-overlay" ref="linesContainer">
-          
+          <!-- ИЗМЕНЕНО: Работаем напрямую с props.linesState -->
           <div
             v-for="line in linesState.horizontal"
             :key="line.id"
@@ -41,7 +41,7 @@
             @contextmenu.prevent.stop="handleLineContextMenu($event, line)"
           ></div>
           
-          
+          <!-- Вертикальные линии с относительными координатами -->
           <div
             v-for="line in linesState.vertical"
             :key="line.id"
@@ -54,7 +54,7 @@
       </div>
     </div>
 
-    
+    <!-- Контекстное меню -->
     <div 
       v-if="contextMenu.visible"
       class="context-menu"
@@ -101,7 +101,7 @@
       </div>
     </div>
 
-    
+    <!-- Overlay для закрытия меню -->
     <div 
       v-if="contextMenu.visible"
       class="context-overlay"
@@ -113,15 +113,18 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed, type PropType } from 'vue'
 
+// Изменено: храним относительные координаты (0-1) вместо абсолютных пикселей
 interface Line {
   id: string
-  relativeX: number
-  relativeY: number
+  relativeX: number // от 0 до 1
+  relativeY: number // от 0 до 1
 }
 
+// ИЗМЕНЕНО: Определяем тип для всего объекта состояния
 interface LinesState {
   horizontal: Line[]
   vertical: Line[]
+  // Добавляем остальные поля, если они нужны дочернему компоненту
 }
 
 interface Props {
@@ -131,18 +134,27 @@ interface Props {
   initialVerticalLines?: Line[]
 }
 
+// ИЗМЕНЕНО: Принимаем один реактивный объект linesState
 const props = defineProps({
   imageUrl: { type: String, required: true },
   imageAlt: { type: String, default: 'Interactive image' },
   linesState: { type: Object as PropType<LinesState>, required: true }
 })
 
+// emit больше не нужен, так как мы мутируем props напрямую
+// const emit = defineEmits(['lines-changed'])
+
+// --- REFS AND STATE ---
+// Внутреннее состояние для линий больше не нужно
+// const horizontalLines = ref<Line[]>([])
+// const verticalLines = ref<Line[]>([])
 const interactiveImageContainer = ref<HTMLElement | null>(null)
 const imageElement = ref<HTMLImageElement | null>(null)
 const imageContainer = ref<HTMLElement | null>(null)
 const linesContainer = ref<HTMLElement | null>(null)
 const draggedLine = ref<{ line: Line; axis: 'x' | 'y' } | null>(null)
 
+// Контекстное меню
 const contextMenu = ref({
   visible: false,
   x: 0,
@@ -152,20 +164,28 @@ const contextMenu = ref({
   intersectionLines: [] as string[]
 })
 
+// --- НОВОЕ: Состояние для зума и панорамирования ---
 const zoomLevel = ref(1)
 const panOffset = ref({ x: 0, y: 0 })
 const isPanning = ref(false)
 const panStart = ref({ x: 0, y: 0 })
 
+// --- COMPUTED ---
+
+// НОВОЕ: Вычисляемое свойство для применения transform
 const imageTransformStyle = computed(() => ({
   transform: `scale(${zoomLevel.value}) translate(${panOffset.value.x}px, ${panOffset.value.y}px)`,
   cursor: isPanning.value ? 'grabbing' : (zoomLevel.value > 1 ? 'grab' : 'default')
 }))
 
+// --- УДАЛЕНЫ ВСЕ WATCHERS И ФУНКЦИИ ИНИЦИАЛИЗАЦИИ ---
+// watch, onImageLoad, initializeLinesFromProps, emitLinesChanged - больше не нужны
+
 const onImageLoad = () => {
   console.log('Interactive image loaded. Lines are managed by parent.')
 }
 
+// ИСПРАВЛЕНО: Упрощенная обработка перетаскивания с процентными координатами
 const startDrag = (event: MouseEvent, line: Line, axis: 'x' | 'y') => {
   event.preventDefault()
   event.stopPropagation()
@@ -180,19 +200,24 @@ const startDrag = (event: MouseEvent, line: Line, axis: 'x' | 'y') => {
 const onDrag = (event: MouseEvent) => {
   if (!draggedLine.value || !imageContainer.value) return
 
+  // ИСПРАВЛЕНО: Получаем координаты относительно контейнера изображения
   const containerRect = imageContainer.value.getBoundingClientRect()
   const { line, axis } = draggedLine.value
 
   if (axis === 'x') {
+    // Вертикальная линия (движется по X)
     const pixelX = event.clientX - containerRect.left
     const relativeX = Math.max(0, Math.min(1, pixelX / containerRect.width))
     
+    // ИЗМЕНЕНО: Мутируем prop напрямую
     line.relativeX = relativeX
     console.log(`Dragging vertical line - Relative X: ${relativeX.toFixed(3)}`)
   } else {
+    // Горизонтальная линия (движется по Y)
     const pixelY = event.clientY - containerRect.top
     const relativeY = Math.max(0, Math.min(1, pixelY / containerRect.height))
     
+    // ИЗМЕНЕНО: Мутируем prop напрямую
     line.relativeY = relativeY
     console.log(`Dragging horizontal line - Relative Y: ${relativeY.toFixed(3)}`)
   }
@@ -207,20 +232,24 @@ const endDrag = () => {
   document.removeEventListener('mouseup', endDrag)
 }
 
+// ИСПРАВЛЕНО: Упрощенная обработка контекстного меню
 const handleContextMenu = (event: MouseEvent) => {
   if (!imageContainer.value) return
   
   event.preventDefault()
   
+  // ИСПРАВЛЕНО: Получаем координаты относительно контейнера изображения
   const containerRect = imageContainer.value.getBoundingClientRect()
   const x = event.clientX - containerRect.left
   const y = event.clientY - containerRect.top
   
+  // Проверяем, что клик был внутри изображения
   if (x < 0 || x > containerRect.width || y < 0 || y > containerRect.height) {
     console.log('Click outside image bounds')
     return
   }
   
+  // Сохраняем относительные координаты
   const relativeX = x / containerRect.width
   const relativeY = y / containerRect.height
   
@@ -233,6 +262,7 @@ const handleContextMenu = (event: MouseEvent) => {
     intersectionLines: []
   }
   
+  // Сохраняем координаты для добавления линий
   ;(contextMenu.value as any).relativeX = relativeX
   ;(contextMenu.value as any).relativeY = relativeY
   
@@ -249,6 +279,7 @@ const addLine = (type: 'horizontal' | 'vertical') => {
       relativeX: 0,
       relativeY: Math.max(0.01, Math.min(0.99, savedRelativeY))
     }
+    // ИЗМЕНЕНО: Мутируем prop напрямую
     props.linesState.horizontal.push(newLine)
     console.log(`Added horizontal line at relative Y: ${newLine.relativeY.toFixed(3)}`)
   } else {
@@ -257,6 +288,7 @@ const addLine = (type: 'horizontal' | 'vertical') => {
       relativeX: Math.max(0.01, Math.min(0.99, savedRelativeX)),
       relativeY: 0
     }
+    // ИЗМЕНЕНО: Мутируем prop напрямую
     props.linesState.vertical.push(newLine)
     console.log(`Added vertical line at relative X: ${newLine.relativeX.toFixed(3)}`)
   }
@@ -279,6 +311,7 @@ const handleLineContextMenu = (event: MouseEvent, line: Line) => {
 }
 
 const deleteLine = (lineId: string) => {
+  // ИЗМЕНЕНО: Мутируем prop напрямую
   props.linesState.horizontal = props.linesState.horizontal.filter(line => line.id !== lineId)
   props.linesState.vertical = props.linesState.vertical.filter(line => line.id !== lineId)
   console.log(`Deleted line: ${lineId}`)
@@ -303,31 +336,40 @@ const getLineDescription = (lineId: string): string => {
   return 'Неизвестная линия'
 }
 
+// Генерация уникального ID для линий
 let lineIdCounter = 0
 const generateLineId = (type: 'h' | 'v') => `${type}-${Date.now()}-${++lineIdCounter}`
 
+// Обработка кликов вне меню
 const handleDocumentClick = () => {
   if (contextMenu.value.visible) {
     closeContextMenu()
   }
 }
 
+// --- НОВЫЕ МЕТОДЫ: Зум и Панорамирование ---
+
 const handleWheelZoom = (event: WheelEvent) => {
+  // event.preventDefault() уже стоит в шаблоне
   const zoomSpeed = 0.1
   const oldZoom = zoomLevel.value
 
   if (event.deltaY < 0) {
-    zoomLevel.value = Math.min(zoomLevel.value + zoomSpeed, 5)
+    // Zoom In
+    zoomLevel.value = Math.min(zoomLevel.value + zoomSpeed, 5) // Максимальный зум 5x
   } else {
-    zoomLevel.value = Math.max(zoomLevel.value - zoomSpeed, 1)
+    // Zoom Out
+    zoomLevel.value = Math.max(zoomLevel.value - zoomSpeed, 1) // Минимальный зум 1x
   }
 
+  // Сбрасываем панорамирование, если вернулись к исходному масштабу
   if (zoomLevel.value === 1) {
     panOffset.value = { x: 0, y: 0 }
   }
 }
 
 const startPan = (event: MouseEvent) => {
+  // Не начинаем панорамирование, если кликнули по линии или не в режиме зума
   if (event.target !== imageContainer.value && event.target !== imageElement.value) return
   if (zoomLevel.value <= 1) return
   
@@ -402,23 +444,34 @@ onBeforeUnmount(() => {
   background-color: var(--bg-color-secondary);
   min-height: 300px;
   padding: var(--spacing-sm);
+  /* НОВОЕ: Скрываем все, что выходит за пределы при зуме */
   overflow: hidden;
 }
+
+/* НОВОЕ: Контейнер для изображения и линий */
 .image-and-lines-container {
   position: relative;
   display: inline-block;
   max-width: 100%;
   max-height: 100%;
+  /* НОВОЕ: Плавный переход для трансформаций */
   transition: transform 0.1s ease-out;
+  /* НОВОЕ: Указываем, откуда масштабировать (из центра) */
   transform-origin: center center;
 }
+
+/* ИСПРАВЛЕНО: Изображение автоматически масштабируется */
 .responsive-image {
   display: block;
   max-width: 100%;
   max-height: 100%;
   width: auto;
   height: auto;
+  /* ИЗМЕНЕНО: object-fit больше не нужен, так как мы управляем размером контейнера */
+  /* object-fit: contain; */
 }
+
+/* ИСПРАВЛЕНО: Overlay для линий, точно повторяет размеры изображения */
 .lines-overlay {
   position: absolute;
   top: 0;
@@ -447,7 +500,7 @@ onBeforeUnmount(() => {
   height: 2px;
   left: 0;
   cursor: ns-resize;
-  transform: translateY(-1px);
+  transform: translateY(-1px); /* Центрируем линию */
 }
 
 .vertical-line {
@@ -455,7 +508,7 @@ onBeforeUnmount(() => {
   height: 100%;
   top: 0;
   cursor: ew-resize;
-  transform: translateX(-1px);
+  transform: translateX(-1px); /* Центрируем линию */
 }
 
 .context-menu {

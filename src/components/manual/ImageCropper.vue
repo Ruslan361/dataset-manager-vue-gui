@@ -20,7 +20,7 @@
     </div>
 
     <div class="cropper-actions">
-      
+      <!-- Кнопки остались без изменений -->
       <button @click="reset" :disabled="!props.selectedImageId">Сброс</button>
       <button @click="auto" :disabled="!props.selectedImageId">Авто</button>
       <button @click="localClear">Очистить</button>
@@ -39,7 +39,7 @@ import { cropAPI, type Crop } from '@/api/crop'
 interface Props {
   selectedImageId: number | null
   datasetId: number
-  aspectRatio?: number
+  aspectRatio?: number // 0 = свободно
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -51,13 +51,16 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
+// Используем any, чтобы избежать ошибок TS при вызове методов библиотеки
 const cropperRef = ref<any>(null)
 const lastCanvas = ref<HTMLCanvasElement | null>(null)
 const imageUrl = ref<string>('')
 
+// Храним кроп с сервера, пока картинка не загрузится
 const pendingCrop = ref<Crop | null>(null)
 const isImageLoaded = ref(false)
 
+// 1. Загрузка URL изображения
 const loadImageUrl = async (id: number | null) => {
   imageUrl.value = ''
   isImageLoaded.value = false
@@ -72,13 +75,14 @@ const loadImageUrl = async (id: number | null) => {
         imageUrl.value = base64
         return
       }
-    } catch (e) { }
+    } catch (e) { /* ignore */ }
     
   } catch (err) {
     console.error('ImageCropper: error loading image', err)
   }
 }
 
+// 2. Загрузка координат с сервера
 async function loadServerCrop(id: number | null) {
   pendingCrop.value = null
   if (!id) return
@@ -92,23 +96,27 @@ async function loadServerCrop(id: number | null) {
   }
 }
 
+// 3. Событие готовности кропера
 const onCropperReady = () => {
   isImageLoaded.value = true
   tryApplyPendingCrop()
 }
 
+// 4. Применение отложенного кропа
 function tryApplyPendingCrop() {
   if (isImageLoaded.value && pendingCrop.value && cropperRef.value) {
     applyServerCrop(pendingCrop.value)
   }
 }
 
+// 5. Установка координат (Set)
 function applyServerCrop(c: Crop) {
   if (!cropperRef.value) return
 
   const width = c.right - c.left
   const height = c.bottom - c.top
 
+  // setCoordinates ожидает { left, top, width, height }
   cropperRef.value.setCoordinates({
     left: c.left,
     top: c.top,
@@ -117,6 +125,7 @@ function applyServerCrop(c: Crop) {
   })
 }
 
+// Следим за ID изображения
 watch(() => props.selectedImageId, async (newId) => {
   await loadImageUrl(newId)
   await loadServerCrop(newId)
@@ -126,9 +135,11 @@ const onChange = ({ canvas }: { canvas: HTMLCanvasElement | null }) => {
   lastCanvas.value = canvas
 }
 
+// 6. Получение текущих координат (Get) - ИСПРАВЛЕНО
 const getCurrentCrop = (): Crop | null => {
   if (!cropperRef.value) return null
   
+  // ВМЕСТО getCoordinates() ИСПОЛЬЗУЕМ getResult()
   const result = cropperRef.value.getResult()
   
   if (!result || !result.coordinates) return null
@@ -164,6 +175,10 @@ const reset = async () => {
 }
 
 const localClear = () => {
+  // ИСПРАВЛЕНО: Вместо null передаем функцию или пустые координаты, 
+  // но самый надежный способ сбросить рамку в этой библиотеке - это reset() (центр)
+  // или хитрая установка координат за пределы (но это может глючить).
+  // Официальный способ "сбросить" - это вернуть рамку к дефолтному состоянию.
   if (cropperRef.value && typeof cropperRef.value.reset === 'function') {
       cropperRef.value.reset()
   }
@@ -181,6 +196,7 @@ const auto = async () => {
       right: Math.round(autoCropData.right),
     }
     
+    // Применяем сразу (картинка уже должна быть загружена, раз мы нажали кнопку)
     applyServerCrop(normalized)
   } catch (e) {
     console.warn('autoCropImage failed:', e)
@@ -189,6 +205,7 @@ const auto = async () => {
 </script>
 
 <style scoped>
+/* Ваши стили остались без изменений */
 .image-cropper {
   background: #000;
   color: #fff;

@@ -77,7 +77,7 @@ const goToLast = () => {
     </div>
     
     <div class="pagination__controls">
-      
+      <!-- Первая страница -->
       <Button
         variant="secondary"
         size="small"
@@ -88,7 +88,7 @@ const goToLast = () => {
         ««
       </Button>
       
-      
+      <!-- Предыдущая -->
       <Button
         variant="secondary"
         size="small"
@@ -99,7 +99,7 @@ const goToLast = () => {
         «
       </Button>
       
-      
+      <!-- Номера страниц -->
       <Button
         v-for="page in visiblePages"
         :key="page"
@@ -110,7 +110,7 @@ const goToLast = () => {
         {{ page }}
       </Button>
       
-      
+      <!-- Следующая -->
       <Button
         variant="secondary"
         size="small"
@@ -121,7 +121,7 @@ const goToLast = () => {
         »
       </Button>
       
-      
+      <!-- Последняя страница -->
       <Button
         variant="secondary"
         size="small"

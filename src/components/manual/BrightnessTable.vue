@@ -61,7 +61,7 @@
               :key="`col-avg-${colIndex}`"
               class="overall-average-cell"
             >
-              
+              <!-- {{ getColumnAverage(colIndex) }} -->
             </td>
             <td 
               v-for="category in categories" 
@@ -102,6 +102,8 @@
 <script setup lang="ts">
 import { ref, computed, type PropType } from 'vue'
 
+// --- PROPS & EMITS ---
+
 interface TableState {
   data: number[][];
   rows: number;
@@ -125,6 +127,8 @@ const emit = defineEmits<{
   (e: 'update:selections', value: Record<string, string>): void
 }>()
 
+// --- STATE ---
+
 const cellMenu = ref({
   visible: false,
   x: 0,
@@ -132,6 +136,8 @@ const cellMenu = ref({
   selectedRow: -1,
   selectedCol: -1
 })
+
+// --- COMPUTED & GETTERS ---
 
 const getCellValue = (row: number, col: number): string => {
   const value = props.tableState.data[row]?.[col];
@@ -195,6 +201,8 @@ const getTotalCategoryAverage = (categoryId: string): string => {
   return count > 0 ? (sum / count).toFixed(3) : '---';
 }
 
+// --- METHODS ---
+
 const handleCellClick = (row: number, col: number) => {
   const key = `${row}-${col}`;
   const newSelections = { ...props.selections };
@@ -250,23 +258,25 @@ const clearCellSelection = () => {
 
 const lightenColor = (color: string, factor: number): string => {
   if (!color || !color.startsWith('#')) {
-    return color;
+    return color; // Возвращаем исходное значение, если формат неверный
   }
 
   let hex = color.replace('#', '');
 
+  // Обработка короткого формата (например, #F0C -> #FF00CC)
   if (hex.length === 3) {
     hex = hex.split('').map(char => char + char).join('');
   }
 
   if (hex.length !== 6) {
-    return color;
+    return color; // Возвращаем исходное значение, если длина некорректна
   }
 
   const r = parseInt(hex.substring(0, 2), 16);
   const g = parseInt(hex.substring(2, 4), 16);
   const b = parseInt(hex.substring(4, 6), 16);
 
+  // Проверяем, что все компоненты являются числами
   if (isNaN(r) || isNaN(g) || isNaN(b)) {
     return color;
   }
@@ -278,6 +288,7 @@ const lightenColor = (color: string, factor: number): string => {
   return `rgb(${newR}, ${newG}, ${newB})`;
 }
 
+// --- EXPOSE (для родителя) ---
 const categoryStatistics = computed(() => {
     return props.categories.map(category => {
         let sum = 0;
@@ -313,6 +324,7 @@ defineExpose({
 </script>
 
 <style scoped>
+/* Стили остаются прежними, так как они применяются к классам, которые мы сохранили */
 .table-container {
   background-color: var(--bg-color);
   border: 1px solid var(--border-color);

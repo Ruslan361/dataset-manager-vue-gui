@@ -13,6 +13,7 @@ const useKMeansStore = defineStore('kmeans', () => {
         colors: [
               [0, 0, 0], [255, 247, 89], [255, 0, 0] ]
         })
+    // Исправляем невалидные значения из старых версий localStorage
     const validCriteria = ['epsilon', 'max iterations', 'all']
     const validFlags = ['pp', 'random']
     if (!validCriteria.includes(parameters.value.criteria)) {
@@ -40,3 +41,5 @@ const useKMeansStore = defineStore('kmeans', () => {
 
 export { useKMeansStore }
 export default useKMeansStore
+
+//EA84CB939A684C80

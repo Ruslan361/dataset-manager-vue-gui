@@ -30,10 +30,12 @@ const hasError = ref(false)
 const isDeleting = ref(false)
 const imageBase64 = ref<string | null>(null)
 
+// Отображаемое имя файла
 const displayName = computed(() => 
   props.originalFilename || props.filename
 )
 
+// URL изображения - используем base64 или плейсхолдер
 const imageUrl = computed(() => {
   if (imageBase64.value) {
     return imageBase64.value
@@ -44,6 +46,7 @@ const imageUrl = computed(() => {
   return props.placeholderUrl
 })
 
+// Загрузка изображения через API
 const loadImage = async () => {
   try {
     isLoading.value = true
@@ -52,12 +55,15 @@ const loadImage = async () => {
     
     console.log(`Loading image ${props.id}...`)
     
+    // Используем downloadImage для получения base64
     const base64Data = await imagesAPI.getImageBase64(props.id)
     
     if (base64Data) {
+      // Проверяем, есть ли уже префикс data:image
       if (base64Data.startsWith('data:image')) {
         imageBase64.value = base64Data
       } else {
+        // Добавляем префикс для base64 (предполагаем JPEG, но можно определить по файлу)
         imageBase64.value = `data:image/jpeg;base64,${base64Data}`
       }
       console.log(`Image ${props.id} loaded successfully`)
@@ -73,6 +79,7 @@ const loadImage = async () => {
   }
 }
 
+// Обработчики событий
 const handleImageClick = () => {
   if (isDeleting.value) return
   emit('click', props.id)
@@ -93,12 +100,14 @@ const handleDeleteClick = (event: Event) => {
   isDeleting.value = true
   emit('delete', props.id)
   
+  // Сбрасываем состояние через некоторое время на случай если удаление не удалось
   setTimeout(() => {
     isDeleting.value = false
   }, 5000)
 }
 
 const handleImageLoad = () => {
+  // Изображение загружено успешно
   console.log(`Image ${props.id} rendered successfully`)
 }
 
@@ -107,6 +116,7 @@ const handleImageError = () => {
   hasError.value = true
 }
 
+// Загружаем изображение при монтировании и при изменении ID
 onMounted(() => {
   loadImage()
 })
@@ -126,7 +136,7 @@ watch(() => props.id, () => {
     }"
     @click="handleImageClick"
   >
-    
+    <!-- Чекбокс для выбора (только если showCheckbox === true) -->
     <div 
       v-if="showCheckbox" 
       class="image-checkbox"
@@ -141,15 +151,15 @@ watch(() => props.id, () => {
       />
     </div>
 
-    
+    <!-- Контейнер изображения -->
     <div class="image-container">
-      
+      <!-- Плейсхолдер загрузки -->
       <div v-if="isLoading" class="image-placeholder">
         <div class="loading-spinner"></div>
         <div class="loading-text">Загрузка...</div>
       </div>
 
-      
+      <!-- Изображение -->
       <img
         v-else-if="!hasError && imageBase64"
         :src="imageUrl"
@@ -160,7 +170,7 @@ watch(() => props.id, () => {
         @error="handleImageError"
       />
 
-      
+      <!-- Плейсхолдер ошибки -->
       <div v-else class="error-placeholder">
         <div class="error-icon">❌</div>
         <div class="error-text">Ошибка загрузки</div>
@@ -173,7 +183,7 @@ watch(() => props.id, () => {
         </button>
       </div>
 
-      
+      <!-- Оверлей с кнопкой удаления -->
       <div v-if="!isLoading" class="image-overlay">
         <button
           class="delete-btn"
@@ -187,7 +197,7 @@ watch(() => props.id, () => {
       </div>
     </div>
 
-    
+    <!-- Информация об изображении -->
     <div v-if="!isCompact" class="image-info">
       <div class="image-title" :title="displayName">
         {{ displayName }}
@@ -195,7 +205,7 @@ watch(() => props.id, () => {
       <div class="image-id">ID: {{ id }}</div>
     </div>
 
-    
+    <!-- Компактная информация -->
     <div v-else class="image-info-compact">
       <div class="image-title-compact" :title="displayName">
         {{ displayName }}
@@ -425,6 +435,8 @@ watch(() => props.id, () => {
   color: var(--text-color-secondary);
   margin: 0;
 }
+
+/* Адаптивность */
 @media (max-width: 768px) {
   .image-container {
     height: 150px;

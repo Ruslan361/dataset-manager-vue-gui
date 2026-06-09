@@ -36,10 +36,12 @@ export interface ImageUploadForm {
 }
 
 class ImagesAPI {
-  private imageCache = new Map<number, string>()
-  private imageInfoCache = new Map<number, Image>()
+  private imageCache = new Map<number, string>() // Кэш для base64 строк
+  private imageInfoCache = new Map<number, Image>() // Кэш для информации об изображениях
 
+  // Получение информации об изображении по ID
   async getImageById(imageId: number): Promise<Image> {
+    // Проверяем кэш
     if (this.imageInfoCache.has(imageId)) {
       return this.imageInfoCache.get(imageId)!
     }
@@ -58,6 +60,7 @@ class ImagesAPI {
 
       const image: Image = await response.json()
       
+      // Сохраняем в кэш
       this.imageInfoCache.set(imageId, image)
       
       return image
@@ -82,6 +85,7 @@ class ImagesAPI {
 
     const result = await response.json()
     
+    // Сохраняем информацию об изображениях в кэш
     if (result.images) {
       result.images.forEach((image: Image) => {
         this.imageInfoCache.set(image.id, image)
@@ -100,6 +104,7 @@ class ImagesAPI {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
 
+    // Очищаем кэш для удаленного изображения
     this.imageCache.delete(imageId)
     this.imageInfoCache.delete(imageId)
 
@@ -116,6 +121,7 @@ class ImagesAPI {
     return response.blob()
   }
 
+  // Загрузка одного изображения
   async uploadImage(datasetId: number, file: File, title: string, description?: string): Promise<ResultResponse> {
     const formData = new FormData()
     formData.append('file', file)
@@ -137,6 +143,7 @@ class ImagesAPI {
 
     const result = await response.json()
 
+    // Приводим ответ сервера к интерфейсу ResultResponse
     return {
       success: result.success,
       message: result.message,
@@ -144,6 +151,7 @@ class ImagesAPI {
     }
   }
 
+  // Загрузка множественных изображений
   async uploadImages(datasetId: number, files: FileList, title: string, description?: string): Promise<ResultResponse[]> {
     const uploadPromises = Array.from(files).map(file => 
       this.uploadImage(datasetId, file, title, description)
@@ -163,6 +171,7 @@ class ImagesAPI {
     )
   }
 
+  // Загрузка изображений с прогрессом (опционально для будущего использования)
   async uploadImagesWithProgress(
     datasetId: number, 
     files: FileList, 
@@ -207,9 +216,10 @@ class ImagesAPI {
     return results
   }
 
+  // Валидация файлов перед загрузкой
   validateFiles(files: FileList): { valid: boolean; errors: string[] } {
     const errors: string[] = []
-    const maxFileSize = 10 * 1024 * 1024
+    const maxFileSize = 10 * 1024 * 1024 // 10MB
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 
     for (const file of Array.from(files)) {
@@ -228,7 +238,9 @@ class ImagesAPI {
     }
   }
 
+  // Метод для получения изображения как base64 строки
   async getImageBase64(imageId: number): Promise<string> {
+    // Проверяем кэш
     if (this.imageCache.has(imageId)) {
       return this.imageCache.get(imageId)!
     }
@@ -237,6 +249,7 @@ class ImagesAPI {
       const blob = await this.downloadImage(imageId)
       const base64 = await blobToBase64(blob)
       
+      // Сохраняем в кэш
       this.imageCache.set(imageId, base64)
       
       return base64
@@ -246,16 +259,19 @@ class ImagesAPI {
     }
   }
 
+  // Метод для очистки кэша (при необходимости)
   clearImageFromCache(imageId: number) {
     this.imageCache.delete(imageId)
     this.imageInfoCache.delete(imageId)
   }
 
+  // Метод для очистки всего кэша
   clearAllCache() {
     this.imageCache.clear()
     this.imageInfoCache.clear()
   }
 
+  // Метод для получения размера кэша (для отладки)
   getCacheSize(): number {
     return this.imageCache.size
   }

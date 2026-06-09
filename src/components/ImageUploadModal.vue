@@ -14,6 +14,7 @@ const emit = defineEmits<{
   upload: [files: FileList]
 }>()
 
+// Локальное состояние модального окна
 const files = ref<FileList | null>(null)
 const isLoading = ref(false)
 const isDragOver = ref(false)
@@ -23,11 +24,13 @@ const currentFileName = ref<string>('')
 
 const fileInput = ref<HTMLInputElement>()
 
+// Вычисляемые свойства
 const selectedFilesCount = computed(() => files.value ? files.value.length : 0)
 const isFormValid = computed(() => {
   return selectedFilesCount.value > 0 && !uploadError.value
 })
 
+// Сбрасываем форму при открытии/закрытии модального окна
 watch(() => props.isVisible, (newValue) => {
   if (!newValue) {
     resetForm()
@@ -47,6 +50,7 @@ const handleDragOver = (event: DragEvent) => {
 
 const handleDragLeave = (event: DragEvent) => {
   event.preventDefault()
+  // Проверяем, что мы действительно покидаем drop-zone
   const dropZone = event.currentTarget as HTMLElement
   const relatedTarget = event.relatedTarget as HTMLElement
   
@@ -61,6 +65,7 @@ const handleDrop = (event: DragEvent) => {
   
   const droppedFiles = event.dataTransfer?.files
   if (droppedFiles && droppedFiles.length > 0) {
+    // Фильтруем только изображения
     const imageFiles = Array.from(droppedFiles).filter(file => 
       file.type.startsWith('image/')
     )
@@ -86,7 +91,8 @@ const validateFiles = async () => {
     return
   }
   
-  const maxFileSize = 10 * 1024 * 1024
+  // Простая валидация без импорта API
+  const maxFileSize = 10 * 1024 * 1024 // 10MB
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/jpg']
   
   for (const file of Array.from(files.value)) {
@@ -199,9 +205,11 @@ const revokePreviewUrls = () => {
 onUnmounted(revokePreviewUrls)
 
 const getFileDisplayName = (file: File): string => {
+  // Убираем расширение из имени файла для отображения
   return file.name.replace(/\.[^/.]+$/, '')
 }
 
+// Публичные методы для внешнего управления
 const setLoading = (loading: boolean) => {
   isLoading.value = loading
 }
@@ -218,6 +226,7 @@ const setProgress = (progress: number, fileName?: string) => {
   }
 }
 
+// Экспортируем методы для родительского компонента
 defineExpose({
   setLoading,
   setError,
@@ -243,7 +252,7 @@ defineExpose({
         </div>
         
         <form @submit.prevent="handleSubmit" class="modal-form">
-          
+          <!-- Зона перетаскивания -->
           <div 
             class="drop-zone"
             :class="{
@@ -280,7 +289,7 @@ defineExpose({
               </p>
             </div>
             
-            
+            <!-- Превью выбранных файлов -->
             <div v-else class="files-preview">
               <div class="files-summary">
                 <h4>Выбрано файлов: {{ selectedFilesCount }}</h4>
@@ -336,7 +345,7 @@ defineExpose({
             </div>
           </div>
           
-          
+          <!-- Прогресс загрузки -->
           <div v-if="isLoading" class="upload-progress">
             <div class="progress-bar">
               <div 
@@ -352,12 +361,12 @@ defineExpose({
             </div>
           </div>
           
-          
+          <!-- Ошибки валидации -->
           <div v-if="uploadError" class="upload-error">
             <strong>Ошибка:</strong> {{ uploadError }}
           </div>
           
-          
+          <!-- Информация о загрузке -->
           <div v-if="files && files.length > 0 && !isLoading" class="upload-info">
             <div class="upload-info__item">
               <strong>Файлов к загрузке:</strong> {{ selectedFilesCount }}

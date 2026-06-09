@@ -4,8 +4,8 @@ import { blobToBase64 } from './utils'
 
 export interface ManualLine {
   id: string
-  relativeX: number
-  relativeY: number
+  relativeX: number // от 0 до 1
+  relativeY: number // от 0 до 1
 }
 
 export interface GaussianBlurParams {
@@ -14,9 +14,10 @@ export interface GaussianBlurParams {
   sigma_y: number
 }
 
+// Интерфейсы для работы с сервером (с int значениями)
 export interface MeanLinesRequest {
-  vertical_lines: number[]
-  horizontal_lines: number[]
+  vertical_lines: number[] // int значения в пикселях
+  horizontal_lines: number[] // int значения в пикселях
 }
 
 export interface MeanLinesResponse {
@@ -25,8 +26,8 @@ export interface MeanLinesResponse {
   means: number[][]
   image_id: number
   result_id: number
-  vertical_lines: number[]
-  horizontal_lines: number[]
+  vertical_lines: number[] // int значения от сервера
+  horizontal_lines: number[] // int значения от сервера
 }
 
 export interface SelectedCell {
@@ -42,8 +43,8 @@ export interface SelectionCategory {
 }
 
 export interface CategorizedMeanRequest {
-  verticalLines: number[]
-  horizontalLines: number[]
+  verticalLines: number[] // int значения в пикселях
+  horizontalLines: number[] // int значения в пикселях
   selectedCells: SelectedCell[]
   selectionCategories: SelectionCategory[]
   imageID: number
@@ -56,8 +57,8 @@ export interface CategoryMeanResult {
   meanValue: number
   cellCount: number
   cells: Array<{ row: number; col: number }>
-  rowMeans: Array<number | null>
-  rowMeansAverage: number | null
+  rowMeans: Array<number | null> // Добавлено: средние по строкам
+  rowMeansAverage: number | null // Добавлено: общее среднее по строкам
 }
 
 export interface CategorizedMeanResponse {
@@ -68,8 +69,8 @@ export interface CategorizedMeanResponse {
   allCellsMean: number
   categoryResults: CategoryMeanResult[]
   overallMean: number
-  verticalLines: number[]
-  horizontalLines: number[]
+  verticalLines: number[] // int значения
+  horizontalLines: number[] // int значения
   totalCells: number
   selectedCellsCount: number
 }
@@ -77,8 +78,8 @@ export interface CategorizedMeanResponse {
 export interface SavedAnalysisResult {
   resultId: number
   imageId: number
-  verticalLines: number[]
-  horizontalLines: number[]
+  verticalLines: number[] // int значения
+  horizontalLines: number[] // int значения
   selectedCells?: SelectedCell[]
   selectionCategories?: SelectionCategory[]
   means: number[][]
@@ -95,8 +96,8 @@ export interface ImageDimensions {
 
 export interface ManualParameters {
   image_id: number
-  horizontal_lines: number[]
-  vertical_lines: number[]
+  horizontal_lines: number[] // int координаты Y в пикселях
+  vertical_lines: number[] // int координаты X в пикселях
   image_width: number
   image_height: number
 }
@@ -105,7 +106,7 @@ export interface ManualResult {
   id: number
   image_id: number
   parameters: ManualParameters
-  brightness_data: number[][]
+  brightness_data: number[][] // данные яркости по ячейкам
   created_at: string
   updated_at: string
 }
@@ -128,6 +129,7 @@ export interface ManualAnalysisState {
 }
 
 class ManualAnalysisAPI {
+  // ИЗМЕНЕНО: Делаем хранилище состояний реактивным
   private analysisStates = reactive(new Map<number, ManualAnalysisState>())
 
   /**
@@ -163,6 +165,7 @@ class ManualAnalysisAPI {
       const base64 = await imagesAPI.getImageBase64(imageId)
       state.originalImageBase64 = base64
       
+      // Получаем размеры изображения
       const dimensions = await this.getImageDimensions(base64)
       state.imageDimensions = dimensions
       
@@ -234,7 +237,9 @@ class ManualAnalysisAPI {
       const state = this.getAnalysisState(imageId)
       state.lastServerResult = result
       
+      // Восстанавливаем линии из результата
       if (state.imageDimensions) {
+        // Фильтруем граничные линии (0 и максимальные значения)
         const filteredVertical = result.parameters.vertical_lines.filter(
           (x: number) => x > 0 && x < state.imageDimensions!.width
         )
@@ -270,6 +275,7 @@ class ManualAnalysisAPI {
     const horizontal: ManualLine[] = []
     const vertical: ManualLine[] = []
 
+    // 3 горизонтальные линии (на 1/4, 1/2, 3/4)
     for (let i = 1; i <= 3; i++) {
       horizontal.push({
         id: `h-${Date.now()}-${i}`,
@@ -278,6 +284,7 @@ class ManualAnalysisAPI {
       })
     }
 
+    // 3 вертикальные линии (на 1/4, 1/2, 3/4)
     for (let i = 1; i <= 3; i++) {
       vertical.push({
         id: `v-${Date.now()}-${i}`,
@@ -300,6 +307,7 @@ class ManualAnalysisAPI {
     const state = this.getAnalysisState(imageId)
     state.currentLines = lines
     
+    // Проверяем, изменились ли параметры по сравнению с последним результатом сервера
     state.hasUnsavedChanges = this.hasParametersChanged(imageId)
     
     console.log('Lines updated:', lines)
@@ -323,6 +331,7 @@ class ManualAnalysisAPI {
     try {
       state.isProcessing = true
       
+      // Конвертируем относительные координаты в int пиксели
       const { verticalPixels, horizontalPixels } = this.convertRelativeLinesToPixels(
         state.currentLines,
         state.imageDimensions
@@ -330,6 +339,7 @@ class ManualAnalysisAPI {
 
       console.log('Calculating mean with int lines:', { verticalPixels, horizontalPixels })
       
+      // ИСПРАВЛЕНО: Отправляем только внутренние линии как int значения
       const verticalLinesForServer = verticalPixels.filter(x => x > 0 && x < state.imageDimensions!.width)
       const horizontalLinesForServer = horizontalPixels.filter(y => y > 0 && y < state.imageDimensions!.height)
       
@@ -378,6 +388,7 @@ class ManualAnalysisAPI {
       
       console.log('Server response received:', result)
       
+      // ИСПРАВЛЕНО: Синхронизируем линии с ответом сервера
       if (result.vertical_lines && result.horizontal_lines) {
         const serverLines = this.convertPixelLinesToRelative(
           result.vertical_lines,
@@ -385,10 +396,12 @@ class ManualAnalysisAPI {
           state.imageDimensions
         )
         
+        // Обновляем текущие линии в соответствии с сервером
         state.currentLines = serverLines
         console.log('Updated lines from server:', serverLines)
       }
       
+      // Создаем результат с int значениями
       const manualResult: ManualResult = {
         id: result.result_id,
         image_id: result.image_id,
@@ -404,9 +417,11 @@ class ManualAnalysisAPI {
         updated_at: new Date().toISOString()
       }
       
+      // Сохраняем результат и обновляем состояние
       state.lastServerResult = manualResult
       state.hasUnsavedChanges = false
       
+      // ДОБАВЛЕНО: Автоматический пересчет всех средних после сохранения
       await this.recalculateAllMeans(imageId)
       
       console.log('Mean calculation completed with int values:', manualResult)
@@ -441,6 +456,7 @@ class ManualAnalysisAPI {
     try {
       state.isProcessing = true
       
+      // Конвертируем относительные координаты в int пиксели
       const { verticalPixels, horizontalPixels } = this.convertRelativeLinesToPixels(
         state.currentLines,
         state.imageDimensions
@@ -453,6 +469,7 @@ class ManualAnalysisAPI {
         selectionCategories
       })
       
+      // Убеждаемся что все линии - целые числа
       const intVerticalLines = verticalPixels.map(x => Math.round(x))
       const intHorizontalLines = horizontalPixels.map(y => Math.round(y))
       
@@ -464,8 +481,8 @@ class ManualAnalysisAPI {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          verticalLines: intVerticalLines,
-          horizontalLines: intHorizontalLines,
+          verticalLines: intVerticalLines,   // int массив
+          horizontalLines: intHorizontalLines, // int массив
           selectedCells,
           selectionCategories,
           imageID: imageId
@@ -480,6 +497,7 @@ class ManualAnalysisAPI {
           console.error('Server error response:', errorData)
           
           if (errorData.detail) {
+            // Если detail - это массив ошибок валидации
             if (Array.isArray(errorData.detail)) {
               const validationErrors = errorData.detail.map((error: any) => {
                 if (typeof error === 'string') return error
@@ -502,6 +520,7 @@ class ManualAnalysisAPI {
 
       const result: CategorizedMeanResponse = await response.json()
       
+      // Убеждаемся что результат содержит int значения
       result.verticalLines = result.verticalLines.map(x => Math.round(x))
       result.horizontalLines = result.horizontalLines.map(y => Math.round(y))
       
@@ -531,8 +550,10 @@ class ManualAnalysisAPI {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
+      // Получаем ответ от сервера, который имеет вложенную структуру
       const rawResult = await response.json()
       
+      // Проверяем, что ответ имеет ожидаемую структуру
       if (!rawResult || !rawResult.result || !rawResult.success) {
         console.warn('Received unexpected format for categorized result:', rawResult)
         return null
@@ -540,12 +561,14 @@ class ManualAnalysisAPI {
 
       console.log('Found existing categorized result (raw):', rawResult)
 
+      // Преобразуем вложенный ответ в "плоскую" структуру CategorizedMeanResponse
       const formattedResult: CategorizedMeanResponse = {
         success: rawResult.success,
         message: `Restored result from ${rawResult.created_at}`,
         imageId: rawResult.image_id,
         resultId: rawResult.result_id,
-        allCellsMean: rawResult.result.allCellsMean || 0,
+        // Данные из вложенного объекта 'result'
+        allCellsMean: rawResult.result.allCellsMean || 0, // allCellsMean может не быть
         categoryResults: rawResult.result.categoryResults || [],
         overallMean: rawResult.result.overallMean || 0,
         verticalLines: rawResult.result.verticalLines || [],
@@ -580,6 +603,7 @@ class ManualAnalysisAPI {
 
     const cells: Array<Array<{ x: number; y: number; width: number; height: number }>> = []
     
+    // Добавляем границы изображения к линиям
     const allVertical = [0, ...verticalPixels.sort((a, b) => a - b), state.imageDimensions.width]
     const allHorizontal = [0, ...horizontalPixels.sort((a, b) => a - b), state.imageDimensions.height]
 
@@ -645,6 +669,8 @@ class ManualAnalysisAPI {
     console.log(`Cleared analysis state for image ${imageId}`)
   }
 
+  // Вспомогательные методы
+
   private async getImageDimensions(base64Image: string): Promise<{ width: number; height: number }> {
     return new Promise((resolve, reject) => {
       const img = new Image()
@@ -668,6 +694,7 @@ class ManualAnalysisAPI {
     lines: { horizontal: ManualLine[]; vertical: ManualLine[] },
     dimensions: { width: number; height: number }
   ): { verticalPixels: number[]; horizontalPixels: number[] } {
+    // ИСПРАВЛЕНО: Сразу конвертируем в int значения
     const verticalPixels = lines.vertical
       .map(line => Math.round(line.relativeX * dimensions.width))
       .sort((a, b) => a - b)
@@ -676,6 +703,7 @@ class ManualAnalysisAPI {
       .map(line => Math.round(line.relativeY * dimensions.height))
       .sort((a, b) => a - b)
 
+    // Добавляем границы изображения как int значения
     const allVertical = [0, ...verticalPixels.filter(x => x > 0 && x < dimensions.width), dimensions.width]
     const allHorizontal = [0, ...horizontalPixels.filter(y => y > 0 && y < dimensions.height), dimensions.height]
 
@@ -690,6 +718,7 @@ class ManualAnalysisAPI {
     horizontalPixels: number[],
     dimensions: { width: number; height: number }
   ): { horizontal: ManualLine[]; vertical: ManualLine[] } {
+    // ИСПРАВЛЕНО: Фильтруем границы при конвертации обратно в относительные координаты
     const filteredVertical = verticalPixels.filter(x => x > 0 && x < dimensions.width)
     const filteredHorizontal = horizontalPixels.filter(y => y > 0 && y < dimensions.height)
     
@@ -720,6 +749,7 @@ class ManualAnalysisAPI {
       state.imageDimensions
     )
 
+    // ИСПРАВЛЕНО: Сравниваем только внутренние линии, так как границы добавляются сервером
     const currentVertical = verticalPixels.filter(x => x > 0 && x < state.imageDimensions!.width).sort((a, b) => a - b)
     const currentHorizontal = horizontalPixels.filter(y => y > 0 && y < state.imageDimensions!.height).sort((a, b) => a - b)
 
@@ -774,6 +804,7 @@ class ManualAnalysisAPI {
     const brightnessData = state.lastServerResult.brightness_data;
     const cellMeans = brightnessData;
     
+    // Пересчитываем средние по строкам
     const rowMeans = cellMeans.map(row => {
       const validValues = row.filter(val => val !== null && !isNaN(val));
       return validValues.length > 0 
@@ -781,6 +812,7 @@ class ManualAnalysisAPI {
         : 0;
     });
 
+    // Пересчитываем средние по колонкам
     const colMeans: number[] = [];
     const colCount = cellMeans.length > 0 ? (cellMeans[0]?.length || 0) : 0;
     for (let col = 0; col < colCount; col++) {
@@ -792,6 +824,7 @@ class ManualAnalysisAPI {
         : 0;
     }
 
+    // Пересчитываем общее среднее как арифметическое всех ячеек
     const allValues = cellMeans.flat().filter(val => val !== null && !isNaN(val));
     const overallMean = allValues.length > 0 
       ? allValues.reduce((sum, val) => sum + val, 0) / allValues.length 
@@ -837,6 +870,7 @@ class ManualAnalysisAPI {
     const state = this.getAnalysisState(imageId);
     
     if (!state.currentLines.horizontal.length || !state.currentLines.vertical.length) {
+      // Инициализируем линии по умолчанию если их нет
       this.initializeDefaultLines(imageId);
     }
 
@@ -845,6 +879,7 @@ class ManualAnalysisAPI {
       cols: state.currentLines.vertical.length + 1
     };
 
+    // Если есть сохраненный результат, возвращаем его данные
     if (state.lastServerResult?.brightness_data) {
       const recalculated = await this.recalculateAllMeans(imageId);
       return {
@@ -853,6 +888,7 @@ class ManualAnalysisAPI {
       };
     }
 
+    // Иначе возвращаем только размеры
     return { dimensions };
   }
 
@@ -872,8 +908,10 @@ class ManualAnalysisAPI {
     }>;
     fixedOverallMean: number;
   }> {
+    // Сначала получаем стандартный результат
     const result = await this.calculateCategorizedMean(imageId, selectedCells, selectionCategories);
     
+    // Пересчитываем общее среднее как арифметическое всех ячеек
     const state = this.getAnalysisState(imageId);
     if (state.lastServerResult?.brightness_data) {
       const allValues = state.lastServerResult.brightness_data.flat().filter(val => val !== null && !isNaN(val));
@@ -881,6 +919,7 @@ class ManualAnalysisAPI {
         ? allValues.reduce((sum, val) => sum + val, 0) / allValues.length 
         : 0;
       
+      // Получаем средние по категориям для строки итогов
       const categoryRowMeans = this.getCategoryRowMeans(result.categoryResults);
       
       return {
@@ -921,6 +960,8 @@ class ManualAnalysisAPI {
   resetTableState(imageId: number): void {
     const state = this.getAnalysisState(imageId);
     
+    // Сбрасываем выделенные ячейки и категории
+    // Эти данные должны храниться отдельно в компоненте таблицы
     console.log(`Reset table state for image ${imageId}`);
   }
 
@@ -951,11 +992,13 @@ class ManualAnalysisAPI {
 
       console.log('Calculated dimensions for image', imageId, ':', dimensions)
 
+      // Если есть сохраненный результат, возвращаем его данные
       if (state.lastServerResult?.brightness_data) {
         console.log('Found saved result, recalculating means...')
         
         const recalculated = await this.recalculateAllMeans(imageId);
         
+        // Безопасно пытаемся восстановить выделения ячеек
         const cellSelections = await this.safeRestoreCellSelections(imageId);
         
         return {
@@ -966,6 +1009,7 @@ class ManualAnalysisAPI {
         };
       }
 
+      // Иначе возвращаем только размеры
       console.log('No saved result found, returning dimensions only')
       return { 
         dimensions, 
@@ -1020,4 +1064,5 @@ class ManualAnalysisAPI {
   }
 }
 
+// Экспортируем singleton instance
 export const manualAnalysisAPI = new ManualAnalysisAPI()

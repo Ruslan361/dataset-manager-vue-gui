@@ -18,6 +18,7 @@ const emit = defineEmits<{
 const isDeleting = ref<Set<number>>(new Set())
 const deletedImages = ref<Set<number>>(new Set())
 
+// Отфильтрованные изображения (исключаем удаленные)
 const availableImages = computed(() => 
   props.images.filter(img => !deletedImages.value.has(img.id))
 )
@@ -28,6 +29,8 @@ const handleImageClick = (imageId: number) => {
 }
 
 const handleImageSelect = (imageId: number, selected: boolean) => {
+  // В контексте анализа мы не используем множественный выбор
+  // Просто переключаемся на выбранное изображение
   if (selected) {
     emit('imageSelect', imageId)
   }
@@ -39,6 +42,7 @@ const handleImageDelete = async (imageId: number) => {
     
     const result = await imagesAPI.removeImage(imageId)
     if (result.success) {
+      // Помечаем изображение как удаленное
       deletedImages.value.add(imageId)
       emit('imageDeleted', imageId)
     } else {
@@ -57,7 +61,7 @@ const handleImageDelete = async (imageId: number) => {
 <template>
   <div class="image-strip">
     <div class="image-list">
-      
+      <!-- Используем ImageCard для каждого изображения -->
       <div
         v-for="image in availableImages"
         :key="image.id"
@@ -80,7 +84,7 @@ const handleImageDelete = async (imageId: number) => {
         />
       </div>
       
-      
+      <!-- Сообщения об удаленных изображениях -->
       <div
         v-for="imageId in Array.from(deletedImages)"
         :key="`deleted-${imageId}`"
@@ -95,7 +99,7 @@ const handleImageDelete = async (imageId: number) => {
       </div>
     </div>
     
-    
+    <!-- Пустое состояние -->
     <div v-if="availableImages.length === 0 && deletedImages.size === 0" class="empty-strip">
       <div class="empty-icon">📷</div>
       <div class="empty-text">Нет изображений для анализа</div>
@@ -108,7 +112,7 @@ const handleImageDelete = async (imageId: number) => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  min-height: 0; /* Важно для правильной работы flex */
 }
 
 .image-list {
@@ -119,15 +123,15 @@ const handleImageDelete = async (imageId: number) => {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
-  min-height: 0;
+  min-height: 0; /* Позволяет контейнеру сжиматься */
 }
 
 .image-card-wrapper {
   transition: all 0.2s ease;
   border-radius: var(--border-radius);
   overflow: hidden;
-  flex-shrink: 0;
-  min-height: 200px;
+  flex-shrink: 0; /* Предотвращает сжатие карточек */
+  min-height: 200px; /* Минимальная высота для изображений */
   width: 100%;
 }
 
@@ -156,8 +160,8 @@ const handleImageDelete = async (imageId: number) => {
   align-items: center;
   gap: var(--spacing-sm);
   margin-bottom: var(--spacing-sm);
-  flex-shrink: 0;
-  min-height: 80px;
+  flex-shrink: 0; /* Предотвращает сжатие */
+  min-height: 80px; /* Минимальная высота для уведомлений */
 }
 
 .deleted-icon {
@@ -209,6 +213,8 @@ const handleImageDelete = async (imageId: number) => {
 .empty-text {
   font-size: var(--font-size-base);
 }
+
+/* Улучшенная стилизация скроллбара */
 .image-list::-webkit-scrollbar {
   width: 8px;
 }
@@ -232,17 +238,21 @@ const handleImageDelete = async (imageId: number) => {
 .image-list::-webkit-scrollbar-thumb:active {
   background: var(--primary-color);
 }
+
+/* Для Firefox */
 .image-list {
   scrollbar-width: thin;
   scrollbar-color: var(--border-color-hover) var(--bg-color-secondary);
 }
+
+/* Адаптивность */
 @media (max-width: 768px) {
   .image-list {
     padding: var(--spacing-sm);
   }
   
   .image-card-wrapper {
-    min-height: 150px;
+    min-height: 150px; /* Меньше на мобильных */
   }
   
   .deleted-item {
@@ -253,19 +263,25 @@ const handleImageDelete = async (imageId: number) => {
   .deleted-icon {
     font-size: 18px;
   }
+  
+  /* Более узкий скроллбар на мобильных */
   .image-list::-webkit-scrollbar {
     width: 6px;
   }
 }
+
+/* Дополнительные стили для плавной прокрутки */
 .image-list {
   scroll-behavior: smooth;
 }
+
+/* Если нужно скрыть скроллбар, но оставить прокрутку */
 .image-list.hide-scrollbar {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
 }
 
 .image-list.hide-scrollbar::-webkit-scrollbar {
-  display: none;
+  display: none; /* WebKit */
 }
 </style>

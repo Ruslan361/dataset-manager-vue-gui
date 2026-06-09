@@ -1,6 +1,6 @@
 <template>
   <div class="analysis-container" data-v-inspector="src/components/manual/ManualAnalysis.vue:2:3">
-    
+    <!-- Информация о выбранном изображении -->
     <div class="analysis-info" data-v-inspector="src/components/manual/ManualAnalysis.vue:4:5">
       <div class="info-header" data-v-inspector="src/components/manual/ManualAnalysis.vue:5:7">
         <h4 class="section-title" data-v-inspector="src/components/manual/ManualAnalysis.vue:6:9">Ручной анализ</h4>
@@ -15,7 +15,7 @@
       </div>
     </div>
 
-    
+    <!-- Верхний блок с изображениями -->
     <div v-if="selectedImageId && !uiState.isLoading" class="image-display-area" data-v-inspector="src/components/manual/ManualAnalysis.vue:20:5">
       <SimpleImage
         :image-url="imageState.originalUrl"
@@ -32,7 +32,7 @@
           <div class="image-header-content" data-v-inspector="src/components/manual/ManualAnalysis.vue:33:11">
             <p data-v-inspector="src/components/manual/ManualAnalysis.vue:34:13">Изображение с линиями</p>
             <div class="image-controls" data-v-inspector="src/components/manual/ManualAnalysis.vue:35:13">
-              
+              <!-- ОБНОВЛЕННАЯ кнопка для линий -->
               <button 
                 class="calculate-btn" 
                 @click="calculateMean"
@@ -44,7 +44,7 @@
                 <span v-else data-v-inspector="src/components/manual/ManualAnalysis.vue:45:17">📊 Вычислить среднее</span>
               </button>
               
-              
+              <!-- ОБНОВЛЕННАЯ кнопка отмены для линий -->
               <button 
                 v-if="hasUnsavedLinesChanges"
                 class="revert-btn"
@@ -58,7 +58,7 @@
         </template>
       </InteractiveImage>
     </div>
-    
+    <!-- ИЗМЕНЕНО: Показываем плейсхолдеры только во время общей загрузки -->
     <div v-else-if="selectedImageId && uiState.isLoading" class="image-display-area" data-v-inspector="src/components/manual/ManualAnalysis.vue:63:5">
       <div class="image-placeholder" data-v-inspector="src/components/manual/ManualAnalysis.vue:64:7">
         <div class="loading-spinner" data-v-inspector="src/components/manual/ManualAnalysis.vue:65:9"></div>
@@ -70,10 +70,36 @@
       </div>
     </div>
 
+    <!-- ОБНОВЛЕННОЕ предупреждение о несохраненных изменениях линий -->
+    <!-- 
     
-    
+    <div v-if="hasUnsavedLinesChanges" class="warning-banner lines-warning" data-v-inspector="src/components/manual/ManualAnalysis.vue:75:5">
+      <div class="warning-content" data-v-inspector="src/components/manual/ManualAnalysis.vue:76:7">
+        <span class="warning-icon" data-v-inspector="src/components/manual/ManualAnalysis.vue:77:9">⚠️</span>
+        <span class="warning-text" data-v-inspector="src/components/manual/ManualAnalysis.vue:78:9">
+          У вас есть несохраненные изменения линий. 
+          Нажмите "Пересчитать" для сохранения или "Отменить" для отката.
+        </span>
+        <div class="warning-actions" data-v-inspector="src/components/manual/ManualAnalysis.vue:82:9">
+          <button 
+            class="warning-btn save"
+            @click="calculateMean"
+            :disabled="uiState.isCalculating || !hasValidLines" data-v-inspector="src/components/manual/ManualAnalysis.vue:83:11"
+          >
+            💾 Пересчитать
+          </button>
+          <button 
+            class="warning-btn cancel"
+            @click="linesState.revert" data-v-inspector="src/components/manual/ManualAnalysis.vue:90:11"
+          >
+            ↶ Отменить
+          </button>
+        </div>
+      </div>
+    </div> 
+    -->
 
-    
+    <!-- Информация о линиях -->
     <div class="lines-info" data-v-inspector="src/components/manual/ManualAnalysis.vue:101:5">
       <div class="info-section" data-v-inspector="src/components/manual/ManualAnalysis.vue:102:7">
         <h4 data-v-inspector="src/components/manual/ManualAnalysis.vue:103:9">Текущие линии:</h4>
@@ -89,7 +115,7 @@
         </div>
       </div>
       
-      
+      <!-- Координаты линий в пикселях -->
       <div class="coordinates-info" v-if="imageState.dimensions" data-v-inspector="src/components/manual/ManualAnalysis.vue:117:7">
         <details data-v-inspector="src/components/manual/ManualAnalysis.vue:118:9">
           <summary data-v-inspector="src/components/manual/ManualAnalysis.vue:119:11">Координаты линий в пикселях</summary>
@@ -107,7 +133,7 @@
       </div>
     </div>
 
-    
+    <!-- СТАТИЧНАЯ таблица светимости -->
     <BrightnessTable
       ref="brightnessTableRef"
       :table-state="tableState"
@@ -119,7 +145,7 @@
       @size-change="onTableSizeChange" data-v-inspector="src/components/manual/ManualAnalysis.vue:135:5"
     />
 
-    
+    <!-- НОВОЕ предупреждение о несохраненных изменениях ячеек -->
     <div v-if="cellsState.hasUnsavedChanges || hasUnsavedLinesChanges" class="warning-banner cells-warning" data-v-inspector="src/components/manual/ManualAnalysis.vue:147:5">
       <div class="warning-content" data-v-inspector="src/components/manual/ManualAnalysis.vue:148:7">
         <span class="warning-icon" data-v-inspector="src/components/manual/ManualAnalysis.vue:149:9">⚠️</span>
@@ -145,13 +171,13 @@
       </div>
     </div>
     
-    
+    <!-- Статистика по категориям -->
     <CategoryStatistics
       :statistics="categoryStatistics"
       :total-average="totalAverage" data-v-inspector="src/components/manual/ManualAnalysis.vue:173:5"
     />
 
-    
+    <!-- Статус загрузки -->
     <div v-if="uiState.isLoading" class="loading-overlay" data-v-inspector="src/components/manual/ManualAnalysis.vue:179:5">
       <div class="loading-content" data-v-inspector="src/components/manual/ManualAnalysis.vue:180:7">
         <div class="loading-spinner" data-v-inspector="src/components/manual/ManualAnalysis.vue:181:9"></div>
@@ -159,7 +185,7 @@
       </div>
     </div>
 
-    
+    <!-- Сообщение об ошибке -->
     <div v-if="uiState.errorMessage" class="error-message" data-v-inspector="src/components/manual/ManualAnalysis.vue:187:5">
       <div class="error-content" data-v-inspector="src/components/manual/ManualAnalysis.vue:188:7">
         <span class="error-icon" data-v-inspector="src/components/manual/ManualAnalysis.vue:189:9">❌</span>
@@ -185,8 +211,12 @@ interface Props {
 
 const props = defineProps<Props>()
 
+// ID изображения теперь приходит из props
 const imageId = computed(() => props.selectedImageId)
 
+// --- ОБЪЕДИНЕННЫЕ СТРУКТУРЫ СОСТОЯНИЯ ---
+
+// Состояние UI (загрузка, ошибки)
 const uiState = reactive({
   isLoading: false,
   loadingText: '',
@@ -204,6 +234,8 @@ const uiState = reactive({
   }
 })
 
+// Состояние изображений теперь является вычисляемым свойством,
+// которое берет данные напрямую из API, устраняя дублирование.
 const imageState = computed(() => {
   if (!imageId.value) {
     return { originalUrl: '', blurredUrl: '', dimensions: null }
@@ -216,6 +248,7 @@ const imageState = computed(() => {
   }
 })
 
+// Состояние линий
 const linesState = reactive({
   horizontal: [] as ManualLine[],
   vertical: [] as ManualLine[],
@@ -248,6 +281,7 @@ const linesState = reactive({
   }
 })
 
+// Состояние ячеек таблицы
 const cellsState = reactive({
   current: {} as Record<string, string>,
   saved: {} as Record<string, string>,
@@ -259,14 +293,18 @@ const cellsState = reactive({
     this.saved = { ...this.current }
   },
   revert() {
+    // Просто меняем current, v-model передаст это в дочерний компонент
     this.current = { ...this.saved }
   },
+  // Метод update больше не нужен, v-model делает это автоматически
+  // update(selection: Record<string, string>) { ... }
   reset() {
     this.current = {}
     this.saved = {}
   }
 })
 
+// Состояние данных таблицы
 const tableState = reactive({
   data: [] as number[][],
   rows: 4,
@@ -280,39 +318,51 @@ const tableState = reactive({
   }
 })
 
+// --- КОНЕЦ СТРУКТУР СОСТОЯНИЯ ---
+
+// Результаты с сервера
 const serverResult = ref<ManualResult | null>(null)
 const categorizedResult = ref<CategorizedMeanResponse | null>(null)
 
+// Категории для классификации
 const categories = ref([
   { id: 'epidermis', name: 'Эпидермис', color: '#90EE90' },
   { id: 'dermis', name: 'Дерма', color: '#FFFEE2' }
 ])
 
+// Ссылка на компонент таблицы
 const brightnessTableRef = ref<InstanceType<typeof BrightnessTable> | null>(null)
 
+// Вычисляемые свойства
 const categoryStatistics = computed(() => {
   return brightnessTableRef.value?.getCategoryStatistics || []
 })
 
 const totalAverage = computed(() => {
+  // The totalAverage property on the BrightnessTable component is a property.
   return brightnessTableRef.value?.totalAverage || 0
 })
 
+// РАЗДЕЛЕННЫЕ проверки на несохраненные изменения (теперь используют геттеры)
 const hasUnsavedLinesChanges = computed(() => linesState.hasUnsavedChanges)
 const hasUnsavedCellsChanges = computed(() => cellsState.hasUnsavedChanges)
 
+// ОБЩАЯ проверка для блокировки перехода
 const hasAnyUnsavedChanges = computed(() => {
   return hasUnsavedLinesChanges.value || hasUnsavedCellsChanges.value
 })
 
+// Проверка валидности линий
 const hasValidLines = computed(() => {
   return linesState.horizontal.length > 0 && linesState.vertical.length > 0
 })
 
+// НОВОЕ: Проверка наличия выбранных ячеек
 const hasSelectedCells = computed(() => {
   return Object.keys(cellsState.current).length > 0
 })
 
+// Координаты линий в пикселях (только для отображения)
 const horizontalPixelLines = computed(() => {
   if (!imageState.value.dimensions) return []
   return linesState.horizontal
@@ -327,11 +377,13 @@ const verticalPixelLines = computed(() => {
     .sort((a, b) => a - b)
 })
 
+// НОВЫЕ computed свойства для интервалов заголовков (ИСПРАВЛЕНО)
 const columnIntervals = computed(() => {
   if (!imageState.value.dimensions || !imageId.value) {
     return []
   }
   
+  // ИСПРАВЛЕНО: Используем данные от сервера, которые включают границы
   const state = manualAnalysisAPI.getAnalysisState(imageId.value)
   if (!state.lastServerResult) {
     return []
@@ -358,6 +410,7 @@ const rowIntervals = computed(() => {
     return []
   }
   
+  // ИСПРАВЛЕНО: Используем данные от сервера, которые включают границы
   const state = manualAnalysisAPI.getAnalysisState(imageId.value)
   if (!state.lastServerResult) {
     return []
@@ -379,6 +432,7 @@ const rowIntervals = computed(() => {
   return intervals
 })
 
+// Функции сравнения для определения изменений
 const arraysEqual = (a: ManualLine[], b: ManualLine[]): boolean => {
   if (a.length !== b.length) return false
   
@@ -401,7 +455,10 @@ const objectsEqual = (a: Record<string, string>, b: Record<string, string>): boo
   return keysA.every(key => a[key] === b[key])
 }
 
+
+// Сброс состояния при смене изображения
 const resetComponentState = () => {
+  // imageState.reset() больше не нужен, так как imageState - это computed
   linesState.reset()
   cellsState.reset()
   tableState.reset()
@@ -412,6 +469,7 @@ const resetComponentState = () => {
   uiState.setCalculating(false)
 }
 
+// Загрузка данных для изображения
 const loadImageData = async () => {
   if (!imageId.value) {
     resetComponentState()
@@ -419,11 +477,13 @@ const loadImageData = async () => {
   }
   
   try {
+    // Устанавливаем isLoading в true в самом начале
     uiState.setLoading(true, 'Загрузка изображений...')
     uiState.clearError()
     
     console.log(`Loading data for image ${imageId.value}`)
     
+    // Последовательно загружаем все необходимые данные
     await manualAnalysisAPI.loadOriginalImage(imageId.value)
     
     uiState.setLoading(true, 'Получение размытого изображения...')
@@ -434,24 +494,29 @@ const loadImageData = async () => {
     
     if (existingResult) {
       console.log('Found existing result, restoring data...')
+      // Восстанавливаем данные из результата
       serverResult.value = existingResult
       tableState.data = existingResult.brightness_data
       
       tableState.rows = existingResult.brightness_data.length
       tableState.cols = existingResult.brightness_data[0]?.length || 0
       
+      // Восстанавливаем линии
       const updatedState = manualAnalysisAPI.getAnalysisState(imageId.value)
       linesState.horizontal = updatedState.currentLines.horizontal
       linesState.vertical = updatedState.currentLines.vertical
       
+      // УЛУЧШЕНО: Восстановление категоризованного результата и выделений ячеек
       try {
         uiState.setLoading(true, 'Восстановление выделений ячеек...')
         const categorizedRes = await manualAnalysisAPI.getCategorizedMeanResult(imageId.value)
         if (categorizedRes) {
           categorizedResult.value = categorizedRes
           
+          // Восстанавливаем выделения ячеек из категоризованного результата
           const restoredSelections: Record<string, string> = {}
           
+          // ИСПРАВЛЕНО: Проверяем наличие свойства categoryResults в ответе
           if (categorizedRes.categoryResults && Array.isArray(categorizedRes.categoryResults)) {
             categorizedRes.categoryResults.forEach(categoryResult => {
               if (categoryResult.cells && Array.isArray(categoryResult.cells)) {
@@ -463,6 +528,7 @@ const loadImageData = async () => {
             })
           }
           
+          // ПРОСТО ОБНОВЛЯЕМ РЕАКТИВНОЕ СОСТОЯНИЕ
           cellsState.current = restoredSelections
           
           console.log('Restored cell selections:', restoredSelections)
@@ -473,20 +539,25 @@ const loadImageData = async () => {
         cellsState.current = {}
       }
       
+      // Сохраняем как исходное состояние
       linesState.save()
       cellsState.save()
       
     } else {
       console.log('No existing result, initializing default lines...')
+      // Инициализируем линии по умолчанию
       const defaultLines = manualAnalysisAPI.initializeDefaultLines(imageId.value)
       linesState.horizontal = defaultLines.horizontal
       linesState.vertical = defaultLines.vertical
       
+      // Устанавливаем размеры таблицы по умолчанию
       tableState.rows = linesState.horizontal.length + 1
       tableState.cols = linesState.vertical.length + 1
       
+      // Очищаем выделения для нового изображения
       cellsState.current = {}
       
+      // Сохраняем как исходное состояние
       linesState.save()
       cellsState.save()
     }
@@ -497,10 +568,12 @@ const loadImageData = async () => {
     console.error('Error loading image data:', error)
     uiState.errorMessage = manualAnalysisAPI.formatError(error)
   } finally {
+    // Сбрасываем isLoading в false только после того, как ВСЕ операции завершены
     uiState.setLoading(false)
   }
 }
 
+// УПРОЩЕННЫЙ пересчет среднего
 const calculateMean = async () => {
   if (!imageId.value || uiState.isCalculating || !hasValidLines.value) return
   
@@ -519,17 +592,22 @@ const calculateMean = async () => {
     tableState.cols = result.brightness_data[0]?.length || 0
     tableState.data = result.brightness_data
 
+    // Обновляем размеры блоков
     const state = manualAnalysisAPI.getAnalysisState(imageId.value)
     if (state.imageDimensions) {
       tableState.yBlockSize = Math.round(state.imageDimensions.height / tableState.rows)
       tableState.xBlockSize = Math.round(state.imageDimensions.width / tableState.cols)
     }
 
+    // Синхронизируем линии
     linesState.horizontal = [...state.currentLines.horizontal]
     linesState.vertical = [...state.currentLines.vertical]
 
+    // Сохраняем состояние линий
     linesState.save()
 
+    // Восстанавливаем выделения ячеек из сохранённого категоризованного результата.
+    // Ячейки, вышедшие за пределы новой сетки, отбрасываем.
     if (categorizedRes?.categoryResults) {
       const restoredSelections: Record<string, string> = {}
       categorizedRes.categoryResults.forEach(categoryResult => {
@@ -556,6 +634,7 @@ const calculateMean = async () => {
   }
 }
 
+// НОВАЯ вспомогательная функция для конвертации линий
 const convertRelativeLinesToPixels = (
   lines: { horizontal: ManualLine[], vertical: ManualLine[] },
   dimensions: { width: number; height: number }
@@ -568,6 +647,7 @@ const convertRelativeLinesToPixels = (
     .map(line => Math.round(line.relativeY * dimensions.height))
     .sort((a, b) => a - b)
 
+  // Добавляем границы изображения
   const allVertical = [0, ...verticalPixels.filter(x => x > 0 && x < dimensions.width), dimensions.width]
   const allHorizontal = [0, ...horizontalPixels.filter(y => y > 0 && y < dimensions.height), dimensions.height]
 
@@ -577,6 +657,7 @@ const convertRelativeLinesToPixels = (
   }
 }
 
+// НОВОЕ: Сохранение категоризованного анализа (только для ячеек)
 const saveCategorizedMean = async () => {
   if (!imageId.value || !hasSelectedCells.value || uiState.isCalculating) {
     return
@@ -586,6 +667,7 @@ const saveCategorizedMean = async () => {
     uiState.setCalculating(true)
     uiState.setLoading(true, 'Сохранение выбора ячеек...')
     
+    // Подготавливаем данные для запроса
     const selectedCellsArray = Object.entries(cellsState.current)
       .map(([cellKey, categoryId]) => {
         const [rowStr, colStr] = cellKey.split('-')
@@ -603,19 +685,24 @@ const saveCategorizedMean = async () => {
       categories.value
     )
 
+    // Валидация ответа
     validateCategorizedResponse(result)
 
     categorizedResult.value = result
     
+    // ДОБАВЛЕНО: Пересчитываем все средние после сохранения категорий
     if (imageId.value) {
       await manualAnalysisAPI.recalculateAllMeans(imageId.value)
       
+      // Принудительно обновляем таблицу
       await nextTick()
       if (brightnessTableRef.value) {
+        // This method likely recalculates statistics when called.
         brightnessTableRef.value.getCategoryStatistics
       }
     }
     
+    // Сохраняем ТОЛЬКО состояние ячеек
     cellsState.save()
     
     console.log('Categorized mean saved:', result)
@@ -629,10 +716,12 @@ const saveCategorizedMean = async () => {
   }
 }
 
+// НОВОЕ: Валидация ответа категоризованного анализа
 const validateCategorizedResponse = (response: CategorizedMeanResponse) => {
   const currentTableRows = tableState.rows
   const currentTableCols = tableState.cols
   
+  // Проверяем размеры таблицы
   const expectedTotalCells = currentTableRows * currentTableCols
   if (response.totalCells !== expectedTotalCells) {
     throw new Error(
@@ -640,6 +729,7 @@ const validateCategorizedResponse = (response: CategorizedMeanResponse) => {
     )
   }
 
+  // Проверяем количество выбранных ячеек
   const currentSelectedCount = Object.keys(cellsState.current).length
   if (response.selectedCellsCount !== currentSelectedCount) {
     throw new Error(
@@ -647,6 +737,7 @@ const validateCategorizedResponse = (response: CategorizedMeanResponse) => {
     )
   }
 
+  // Проверяем соответствие линий
   const currentVerticalPixels = verticalPixelLines.value
   const currentHorizontalPixels = horizontalPixelLines.value
   
@@ -667,14 +758,16 @@ const validateCategorizedResponse = (response: CategorizedMeanResponse) => {
   console.log('Categorized response validation passed')
 }
 
+// ВСПОМОГАТЕЛЬНАЯ: Сравнение числовых массивов
 const arraysEqualNumbers = (a: number[], b: number[]): boolean => {
   if (a.length !== b.length) return false
   return a.every((val, index) => {
     const bVal = b[index]
-    return bVal !== undefined && Math.abs(val - bVal) <= 1
+    return bVal !== undefined && Math.abs(val - bVal) <= 1 // Допускаем погрешность в 1 пиксель
   })
 }
 
+// ОБНОВЛЕННАЯ: Проверка при смене изображения
 const checkUnsavedChangesBeforeSwitch = async (newId: number | null, oldId: number | null): Promise<boolean> => {
   if (!oldId || !hasAnyUnsavedChanges.value) return true
   
@@ -686,6 +779,7 @@ const checkUnsavedChangesBeforeSwitch = async (newId: number | null, oldId: numb
   
   switch (userChoice) {
     case 'save':
+      // Сохраняем все изменения
       try {
         if (hasUnsavedLinesChanges.value) {
           await calculateMean()
@@ -700,6 +794,7 @@ const checkUnsavedChangesBeforeSwitch = async (newId: number | null, oldId: numb
       }
     
     case 'discard':
+      // Отбрасываем все изменения
       if (hasUnsavedLinesChanges.value) {
         linesState.revert()
       }
@@ -710,10 +805,12 @@ const checkUnsavedChangesBeforeSwitch = async (newId: number | null, oldId: numb
       
     case 'cancel':
     default:
+      // Отменяем переключение
       return false
   }
 }
 
+// ОБНОВЛЕННЫЙ диалог
 const showUnsavedChangesDialog = (changesTypes: string[]): Promise<'save' | 'discard' | 'cancel'> => {
   return new Promise((resolve) => {
     const changesText = changesTypes.join(' и ')
@@ -728,24 +825,29 @@ const showUnsavedChangesDialog = (changesTypes: string[]): Promise<'save' | 'dis
   })
 }
 
+// УПРОЩЕННОЕ обновление таблицы
 const updateTableAfterImageChange = async () => {
   if (!imageId.value) return
   
   console.log('Updating table after image change')
   
   try {
+    // Получаем данные от API
     const tableUpdate = await manualAnalysisAPI.safeUpdateTableForNewImage(imageId.value)
     
     if (tableUpdate.success) {
+      // Обновляем размеры
       tableState.rows = tableUpdate.dimensions.rows
       tableState.cols = tableUpdate.dimensions.cols
       
+      // Обновляем данные, если они есть
       if (tableUpdate.cellMeans) {
         tableState.data = tableUpdate.cellMeans
       } else {
-        tableState.data = []
+        tableState.data = [] // Очищаем данные, если их нет
       }
       
+      // Обновляем выделения
       if (tableUpdate.cellSelections) {
         cellsState.current = tableUpdate.cellSelections
       } else {
@@ -759,6 +861,7 @@ const updateTableAfterImageChange = async () => {
   }
 }
 
+// ОСНОВНОЙ WATCHER упрощается
 watch(() => props.selectedImageId, async (newId, oldId) => {
   console.log('Selected image ID changing:', { from: oldId, to: newId })
   
@@ -777,10 +880,14 @@ watch(() => props.selectedImageId, async (newId, oldId) => {
   
   if (newId) {
     await loadImageData()
+    // Простой вызов обновления таблицы
     await updateTableAfterImageChange()
   }
 }, { immediate: true })
 
+// onLinesChanged больше не нужен, так как дочерний компонент мутирует linesState напрямую
+
+// Остальные обработчики остаются без изменений
 const onOriginalImageLoad = (event: Event) => {
   console.log('Original image loaded successfully')
 }
@@ -802,6 +909,7 @@ const clearError = () => {
   uiState.clearError()
 }
 
+// Предупреждение при уходе со страницы
 const handleBeforeUnload = (event: BeforeUnloadEvent) => {
   if (imageId.value && hasAnyUnsavedChanges.value) {
     const message = 'У вас есть несохраненные изменения. Если вы покинете страницу, все изменения будут потеряны.'
@@ -819,6 +927,7 @@ onBeforeUnmount(() => {
   console.log('ManualAnalysis component unmounting')
   window.removeEventListener('beforeunload', handleBeforeUnload)
   
+  // Очищаем состояние при размонтировании
   if (imageId.value) {
     manualAnalysisAPI.clearAnalysisState(imageId.value)
   }
@@ -826,6 +935,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* Все существующие стили остаются */
 .analysis-container {
   display: flex;
   flex-direction: column;
@@ -914,6 +1024,8 @@ onBeforeUnmount(() => {
   padding: var(--spacing-md);
   margin: var(--spacing-sm) 0;
 }
+
+/* НОВЫЕ стили для разных типов предупреждений */
 .warning-banner.lines-warning {
   background: linear-gradient(135deg, var(--warning-color), var(--warning-color-dark));
 }
@@ -980,6 +1092,8 @@ onBeforeUnmount(() => {
 .warning-btn.cancel:hover {
   background: var(--error-color-dark);
 }
+
+/* Остальные стили остаются без изменений... */
 .lines-info {
   background: var(--bg-color);
   border: 1px solid var(--border-color);
@@ -1150,6 +1264,8 @@ onBeforeUnmount(() => {
     font-size: 10px;
   }
 }
+
+/* Добавляем стили для info секции */
 .analysis-info {
   background-color: var(--bg-color);
   border: 1px solid var(--border-color);
