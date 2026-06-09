@@ -160,7 +160,7 @@ const handleExportDataset = async (id: number) => {
     const downloadUrl = await datasetsAPI.exportDataset(id)
     
     // Проверяем, запущено ли приложение внутри Tauri
-    const isTauri = false
+    const isTauri = true
     
     if (isTauri) {
       // ==========================================
