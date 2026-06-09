@@ -5,11 +5,11 @@ import { useRoute, useRouter } from 'vue-router'
 import Header from '@/components/Header.vue'
 import Button from '@/components/common/Button.vue'
 import ImageStrip from '@/components/common/ImageStrip.vue'
-import KMeansAnalysis from '@/components/kmeans/KMeansAnalysis.vue'
+// import KMeansAnalysis from '@/components/kmeans/KMeansAnalysis.vue'
 import ManualAnalysis from '@/components/manual/ManualAnalysis.vue'
-import Combo from '@/components/combo/combo.vue'
+// import Combo from '@/components/combo/combo.vue'
 import { imagesAPI, type Image } from '@/api/images'
-import ImageCropper from '@/components/manual/ImageCropper.vue'
+// import ImageCropper from '@/components/manual/ImageCropper.vue'
 import { useOtherStore } from '@/stores/other'
 
 const route = useRoute()
@@ -20,7 +20,7 @@ const images = ref<Image[]>([])
 const selectedImageId = ref<number | null>(null)
 const isLoading = ref(false)
 const error = ref<string | null>(null)
-const activeTab = ref<'kmeans' | 'manual' | 'crop' | 'combo'>('kmeans')
+const activeTab = ref<'kmeans' | 'manual' | 'crop' | 'combo'>('manual')
 const isImagePanelCollapsed = ref(false)
 const otherStore = useOtherStore()
 const isBackwardCompatibility = computed(() => otherStore.isBackwardCompatibility)
@@ -174,13 +174,13 @@ onMounted(() => {
           <div class="right-panel">
             <!-- Вкладки -->
             <div class="tabs">
-              <button
+              <!-- <button
                 class="tab"
                 :class="{ active: activeTab === 'kmeans' }"
                 @click="setActiveTab('kmeans')"
               >
                 Кластеризация
-              </button>
+              </button> -->
               <button
                 class="tab"
                 :class="{ active: activeTab === 'manual' }"
@@ -188,7 +188,7 @@ onMounted(() => {
               >
                 Ручной анализ
               </button>
-              <button
+              <!-- <button
                 class="tab"
                 :class="{ active: activeTab === 'crop' }"
                 @click="setActiveTab('crop')"
@@ -201,24 +201,24 @@ onMounted(() => {
                 @click="setActiveTab('combo')"
               >
                 Комбинированный анализ
-              </button>
+              </button> -->
             </div>
             <!-- Содержимое вкладок -->
             <div class="tab-content">
-              <KMeansAnalysis
+              <!-- <KMeansAnalysis
                 v-if="activeTab === 'kmeans'"
                 :selected-image-id="selectedImageId"
                 :selected-image-ids="imageIds"
                 :dataset-id="datasetId"
-              />
-              
+              /> -->
+
               <ManualAnalysis
-                v-else-if="activeTab === 'manual'"
+                v-if="activeTab === 'manual'"
                 :selected-image-id="selectedImageId"
                 :dataset-id="datasetId"
               />
 
-              <ImageCropper
+              <!-- <ImageCropper
                 v-else-if="activeTab === 'crop'"
                 :selected-image-id="selectedImageId"
                 :dataset-id="datasetId"
@@ -228,7 +228,7 @@ onMounted(() => {
                 v-else-if="activeTab === 'combo'"
                 :selected-image-id="selectedImageId"
                 :dataset-id="datasetId"
-              />
+              /> -->
 
             </div>
           </div>
