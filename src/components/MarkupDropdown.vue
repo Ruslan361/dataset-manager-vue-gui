@@ -15,7 +15,6 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   manualMarkup: []
-  kMeansMarkup: []
 }>()
 
 const router = useRouter()
@@ -33,11 +32,6 @@ const closeDropdown = () => {
 
 const handleManualMarkup = () => {
   emit('manualMarkup')
-  closeDropdown()
-}
-
-const handleKMeansMarkup = () => {
-  emit('kMeansMarkup')
   closeDropdown()
 }
 
@@ -92,20 +86,13 @@ onUnmounted(() => {
     </Button>
     
     <div v-if="isOpen" class="dropdown-menu">
-      <button 
+      <button
         class="dropdown-item"
         @click="handleManualMarkup"
       >
         ✏️ Ручная разметка
       </button>
-      
-      <button 
-        class="dropdown-item"
-        @click="handleKMeansMarkup"
-      >
-        🤖 K-Means разметка
-      </button>
-      
+
       <div class="dropdown-divider"></div>
       
       <button 

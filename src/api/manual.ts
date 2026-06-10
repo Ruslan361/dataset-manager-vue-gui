@@ -162,6 +162,8 @@ class ManualAnalysisAPI {
 
     try {
       const { imagesAPI } = await import('./images')
+      // Сбрасываем JS-кэш для этого ID, чтобы гарантированно получить актуальный файл с сервера
+      imagesAPI.clearImageFromCache(imageId)
       const base64 = await imagesAPI.getImageBase64(imageId)
       state.originalImageBase64 = base64
       

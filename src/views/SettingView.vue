@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import Header from '@/components/Header.vue'
-// import KMeansSettings from '@/components/settings/KMeansSettings.vue'
 import OtherSettings from '@/components/settings/OtherSettings.vue'
 import ThemeSettings from '@/components/settings/ThemeSettings.vue'
 </script>
@@ -9,11 +8,6 @@ import ThemeSettings from '@/components/settings/ThemeSettings.vue'
   <div class="settings-view">
     <Header />
     <main class="settings-main">
-
-      <!-- <section class="settings-section">
-        <h2 class="section-title">Алгоритм K-Means</h2>
-        <KMeansSettings />
-      </section> -->
 
       <section class="settings-section">
         <h2 class="section-title">Тема оформления</h2>

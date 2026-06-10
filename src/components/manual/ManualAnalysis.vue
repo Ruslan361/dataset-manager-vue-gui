@@ -737,24 +737,6 @@ const validateCategorizedResponse = (response: CategorizedMeanResponse) => {
     )
   }
 
-  // Проверяем соответствие линий
-  const currentVerticalPixels = verticalPixelLines.value
-  const currentHorizontalPixels = horizontalPixelLines.value
-  
-  if (!arraysEqualNumbers(response.verticalLines, currentVerticalPixels)) {
-    console.warn('Вертикальные линии не совпадают:', {
-      expected: currentVerticalPixels,
-      received: response.verticalLines
-    })
-  }
-
-  if (!arraysEqualNumbers(response.horizontalLines, currentHorizontalPixels)) {
-    console.warn('Горизонтальные линии не совпадают:', {
-      expected: currentHorizontalPixels,
-      received: response.horizontalLines
-    })
-  }
-
   console.log('Categorized response validation passed')
 }
 
@@ -1019,19 +1001,19 @@ onBeforeUnmount(() => {
 }
 
 .warning-banner {
-  border: 1px solid var(--warning-border);
   border-radius: var(--border-radius);
   padding: var(--spacing-md);
   margin: var(--spacing-sm) 0;
 }
 
-/* НОВЫЕ стили для разных типов предупреждений */
 .warning-banner.lines-warning {
-  background: linear-gradient(135deg, var(--warning-color), var(--warning-color-dark));
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
 }
 
 .warning-banner.cells-warning {
-  background: linear-gradient(135deg, var(--info-color), var(--info-color-dark));
+  background: var(--primary-color-light);
+  border: 1px solid var(--primary-color);
 }
 
 .warning-content {
@@ -1049,7 +1031,7 @@ onBeforeUnmount(() => {
 .warning-text {
   font-size: var(--font-size-sm);
   line-height: 1.4;
-  color: white;
+  color: var(--text-color);
 }
 
 .warning-actions {
@@ -1059,9 +1041,9 @@ onBeforeUnmount(() => {
 }
 
 .warning-btn {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: var(--bg-color);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   padding: var(--spacing-xs) var(--spacing-sm);
   font-size: var(--font-size-sm);
@@ -1071,26 +1053,32 @@ onBeforeUnmount(() => {
 }
 
 .warning-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--bg-color-secondary);
   transform: translateY(-1px);
 }
 
 .warning-btn.save {
-  background: var(--success-color);
-  border-color: var(--success-color);
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
 }
 
 .warning-btn.save:hover {
-  background: var(--success-color-dark);
+  background: var(--success-color);
+  border-color: var(--success-color);
+  color: var(--text-color-button);
 }
 
 .warning-btn.cancel {
-  background: var(--error-color);
-  border-color: var(--error-color);
+  background: var(--error-bg);
+  border-color: var(--error-border);
+  color: var(--error-text);
 }
 
 .warning-btn.cancel:hover {
-  background: var(--error-color-dark);
+  background: var(--error-color);
+  border-color: var(--error-color);
+  color: var(--text-color-button);
 }
 
 /* Остальные стили остаются без изменений... */

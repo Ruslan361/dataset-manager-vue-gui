@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 import Header from '@/components/Header.vue'
 import ImageCard from '@/components/common/ImageCard.vue'
 import Button from '@/components/common/Button.vue'
-import MarkupDropdown from '@/components/MarkupDropdown.vue'
 import Pagination from '@/components/Pagination.vue'
 import ImageUploadModal from '@/components/ImageUploadModal.vue'
 import MarkupImporter from '@/components/MarkupImporter.vue' 
@@ -187,24 +186,6 @@ const handleDeleteSelected = async () => {
   } finally {
     isLoading.value = false
   }
-}
-
-const handleManualMarkup = () => {
-  if (selectedImages.value.size === 0) {
-    alert('Выберите изображения для разметки')
-    return
-  }
-  console.log('Ручная разметка для:', Array.from(selectedImages.value))
-  // Здесь будет переход к ручной разметке
-}
-
-const handleKMeansMarkup = () => {
-  if (selectedImages.value.size === 0) {
-    alert('Выберите изображения для разметки')
-    return
-  }
-  console.log('K-Means разметка для:', Array.from(selectedImages.value))
-  // Здесь будет логика K-Means разметки
 }
 
 const handlePageChange = (page: number) => {

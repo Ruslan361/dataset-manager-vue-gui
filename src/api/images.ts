@@ -112,7 +112,9 @@ class ImagesAPI {
   }
 
   async downloadImage(imageId: number): Promise<Blob> {
-    const response = await fetch(`${API_BASE_URL}/image/download-image/${imageId}`)
+    const response = await fetch(`${API_BASE_URL}/image/download-image/${imageId}`, {
+      cache: 'no-store'
+    })
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
